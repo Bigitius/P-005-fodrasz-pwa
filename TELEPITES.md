@@ -71,5 +71,26 @@ Ez azt teszteli, hogy internet nélkül is működik-e az alkalmazás.
 5. Ha üres vagy hibás oldal jelenik meg, kapcsold ki a repülőgép módot, nyisd
    meg egyszer újra internettel az appot, majd ismételd meg a 2–3. lépést.
 
+## 7. lépés – Telepítés Android táblagépen (pl. Huawei MediaPad T3)
+
+Ugyanaz a webcím működik itt is, mint az iPadnél (2–4. lépés) — nem kell
+külön programot, APK-t vagy áruházat használni, csak a Chrome böngészőt,
+ami a táblagépen alapból rajta van.
+
+1. Nyisd meg Chrome-ban a fenti (github.io-s) webcímet.
+2. Jobb felül kattints a három pontra (⋮), majd válaszd: "Telepítés" vagy
+   "Hozzáadás a kezdőképernyőhöz" (a pontos szöveg Chrome-verziónként
+   eltérhet).
+3. Erősítsd meg — az ikon megjelenik a táblagép kezdőképernyőjén, ugyanúgy
+   mint egy sima alkalmazás, internet nélkül is megnyitható.
+4. Az alkalmazás ezen a táblagépen mindig fekvő tájolásban nyílik meg
+   (ezt a program maga állítja be) — nem kell forgatni, csak egyféle
+   elrendezésre kell számítani.
+5. Ha korábban már telepítve volt egy régebbi verzió, és a friss
+   módosítások nem látszanak: nyisd meg az alkalmazást internettel, várj
+   pár másodpercet (ekkor frissül a háttérben), majd zárd be és nyisd meg
+   újra.
+
 <!-- frissites: v2 telepites inditasa 2026-07-18 -->
+<!-- frissites: v3 Huawei MediaPad T3 tablet-tamogatas (7. lepes) 2026-08-23 -->
 
