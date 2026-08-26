@@ -3,6 +3,7 @@
   "short_name": "Márti fodrászata",
   "display": "standalone",
   "start_url": "./",
+  "orientation": "landscape",
   "background_color": "#0e0b16",
   "theme_color": "#0e0b16",
   "icons": [

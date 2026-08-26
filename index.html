@@ -1889,7 +1889,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="14";
+var APP_VER="15";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -1937,6 +1937,30 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+</script>
+
+<script>
+// === TABLETRE ÁTÜLTETÉS (2026-08-23): fekvő tájolás rögzítése ===
+// A manifest.json "orientation":"landscape" mezője a fő védelem (Android
+// natívan kikényszeríti kezdőképernyőről indított PWA-nál) -- ezt Chrome
+// 38 óta minden Androidos Chrome tiszteletben tartja, tehát a Huawei
+// MediaPad T3 10-en (Chrome 64) is működik indításkor.
+// Ez a blokk csak TARTALÉK: ha a felhasználó valamiért mégis állóra
+// forgatná a táblagépet a program futása közben, megpróbáljuk
+// visszazárni fekvőbe egy érintés után (a böngésző API csak felhasználói
+// interakcióból engedi meg a váltást). iPaden a Safari nem támogatja ezt
+// az API-t -- ott a kód némán kilép, nem történik semmi (nem hiba).
+(function () {
+  function probalZaras() {
+    try {
+      var so = screen.orientation;
+      if (!so || !so.lock) return;
+      so.lock('landscape').catch(function () {});
+    } catch (e) { /* iPad/Safari: nincs API, szándékosan csendben hagyjuk */ }
+  }
+  document.addEventListener('click', probalZaras, { once: true, passive: true });
+  window.addEventListener('load', probalZaras);
+})();
 </script>
 </body>
 </html>
