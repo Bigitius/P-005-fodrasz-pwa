@@ -1890,7 +1890,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="18";
+var APP_VER="19";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -1988,7 +1988,9 @@ if ('serviceWorker' in navigator) {
       visszaall(eredetiSzoveg, 4000);
     }).catch(function (err) {
       console.warn('Offline letoltes hiba:', err);
-      btn.textContent = '❌ Nem sikerült (nézd meg a netet)';
+      var uzenet = (err && (err.message || err.name)) ? (err.message || err.name) : String(err);
+      btn.textContent = '❌ Nem sikerült';
+      alert('Offline letöltés hiba (küldd el screenshotnak):\n' + uzenet);
       visszaall(eredetiSzoveg, 4000);
     });
   });
