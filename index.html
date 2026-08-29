@@ -371,6 +371,7 @@
     </div>
     <button class="backup-btn" id="backupSave" title="Mentés az iPadre (Files)">💾 Mentés</button>
     <button class="backup-btn alt" id="backupLoad" title="Visszatöltés mentésfájlból">📂 Visszatöltés</button>
+    <button class="backup-btn" id="offlineDownload" title="Program letöltése, hogy internet nélkül is működjön">📥 Offline letöltés</button>
     <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
   </header>
 
@@ -1889,7 +1890,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="17";
+var APP_VER="18";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -1937,6 +1938,61 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+</script>
+
+<script>
+// === "Offline letöltés" gomb: kézzel, egyértelmű visszajelzéssel tölti le
+// az appot, hogy internet nélkül is működjön (nem kell a láthatatlan,
+// automatikus háttérfolyamatra hagyatkozni). ===
+(function () {
+  var btn = document.getElementById('offlineDownload');
+  if (!btn) return;
+  var eredetiSzoveg = btn.textContent;
+
+  if (!('serviceWorker' in navigator)) {
+    btn.disabled = true;
+    btn.title = 'A böngésződ nem támogatja az offline letöltést';
+    return;
+  }
+
+  function idozit(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_, reject) {
+        setTimeout(function () { reject(new Error('idotullepes')); }, ms);
+      })
+    ]);
+  }
+
+  function visszaall(szoveg, keses) {
+    setTimeout(function () {
+      btn.textContent = eredetiSzoveg;
+      btn.disabled = false;
+    }, keses);
+  }
+
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    btn.textContent = '⏳ Letöltés...';
+    idozit(
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function (reg) {
+          return (reg.update ? reg.update().catch(function () {}) : Promise.resolve()).then(function () { return reg; });
+        })
+        .then(function () {
+          return navigator.serviceWorker.ready;
+        }),
+      15000
+    ).then(function () {
+      btn.textContent = '✅ Kész, offline is működik';
+      visszaall(eredetiSzoveg, 4000);
+    }).catch(function (err) {
+      console.warn('Offline letoltes hiba:', err);
+      btn.textContent = '❌ Nem sikerült (nézd meg a netet)';
+      visszaall(eredetiSzoveg, 4000);
+    });
+  });
+})();
 </script>
 
 <script>
