@@ -1931,7 +1931,12 @@ document.getElementById('backupFile').addEventListener('change',function(e){
 </script>
 
 <script>
-if ('serviceWorker' in navigator) {
+// 2026-09-06, Istvan dontese: helyi fajlkent (file://, pl. Android
+// fajlkezelobol vagy USB-rol megnyitva) a szolgaltatasmunkas ot javitasi
+// kiserlet utan sem volt megbizhato a regi (2018-as Chrome) Android-tableten
+// -- ezert file:// protokollon MEG NEM IS PROBALKOZUNK vele, igy hibauzenet
+// sem jelenhet meg miatta. HTTP(S)-rol (pl. GitHub Pages) valtozatlanul mukodik.
+if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('service-worker.js').catch(function(err) {
       console.warn('Service worker regisztracio sikertelen:', err);
@@ -1948,6 +1953,14 @@ if ('serviceWorker' in navigator) {
   var btn = document.getElementById('offlineDownload');
   if (!btn) return;
   var eredetiSzoveg = btn.textContent;
+
+  // 2026-09-06: helyi fajlkent (file://) megnyitva a gombnak nincs ertelme --
+  // ott mar amugy is "offline" fut (nincs halozati fuggoseg), nincs mit
+  // letolteni. Inkabb elrejtjuk, mint hogy hibauzenetet mutassunk feleslegesen.
+  if (location.protocol === 'file:') {
+    btn.style.display = 'none';
+    return;
+  }
 
   if (!('serviceWorker' in navigator)) {
     btn.disabled = true;
