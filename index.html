@@ -466,7 +466,12 @@
     <!-- ============ LELTÁR ============ -->
     <section class="panel view" id="view-leltar">
       <div class="leltar-wrap">
-        <div class="lbl" style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:12px">Leltár — vegyszerek</div>
+        <div class="lbl" style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:12px">
+          <div style="margin-bottom:8px">Leltár — vegyszerek</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap">
+            <button class="add-name-btn" id="addChemBtn" style="white-space:nowrap" title="Új anyag hozzáadása">＋ Új anyag</button>
+          </div>
+        </div>
         <div class="chem-grid" id="chemGrid"></div>
         <div class="hint" style="margin-top:14px">A kártyákon lévő „(50g)” mennyiséget a fodrász a szolgáltatás végén pontosíthatja. A levonás csak az <b>elkészült</b> szolgáltatásoknál történik meg (a szerkesztésnél „✓ Elkészült” pipa).</div>
       </div>
@@ -749,12 +754,43 @@ function svcSize(name){
 // ============================================================================
 // LELTÁR (vegyszerek)
 // ============================================================================
-// próba kódok: mind 500g kezdőkészlet
-var CHEMICALS = [
-  { code:"K001", name:"Festék alap K001", start:500 },
-  { code:"K002", name:"Festék alap K002", start:500 },
-  { code:"K003", name:"Festék alap K003", start:500 }
-];
+// a vegyszerlista a localStorage-ban él, hogy a Leltárban hozzáadott új
+// anyagok megmaradjanak (ua. a minta, mint a bookings-nál -- STORAGE_KEY)
+var CHEM_KEY = 'fodrasz_vegyszerek_v1';
+function loadChemicals(){
+  try{
+    var r=localStorage.getItem(CHEM_KEY);
+    if(r){ var a=JSON.parse(r); if(Array.isArray(a)) return a; }
+  }catch(e){}
+  // nincs mentett lista -- próba kódok, mind 500g kezdőkészlet
+  return [
+    { code:"K001", name:"Festék alap K001", start:500 },
+    { code:"K002", name:"Festék alap K002", start:500 },
+    { code:"K003", name:"Festék alap K003", start:500 }
+  ];
+}
+function saveChemicals(){
+  try{ localStorage.setItem(CHEM_KEY, JSON.stringify(CHEMICALS)); }catch(e){}
+}
+var CHEMICALS = loadChemicals();
+// ---- Új anyag hozzáadása a Leltárban (ua. az egyszerű prompt-os minta, mint a névjegynél) ----
+function addChemical(){
+  var code=prompt('Új anyag kódja (rövid azonosító, pl. K004):');
+  if(!code||!code.trim()) return;
+  code=code.trim();
+  if(CHEMICALS.some(function(c){return c.code===code;})){ toast('Már van ilyen kódú anyag.'); return; }
+  var name=prompt('Anyag neve:','');
+  if(name===null) return;
+  name=(name||'').trim()||code;
+  var startStr=prompt('Kezdő mennyiség (gramm):','500');
+  if(startStr===null) return;
+  var start=parseInt(startStr,10);
+  if(isNaN(start)||start<0) start=0;
+  CHEMICALS.push({code:code, name:name, start:start});
+  saveChemicals();
+  renderLeltar();
+  toast('Anyag hozzáadva: '+name);
+}
 // szolgáltatás nevéből gramm kinyerése, pl. "Rövid haj (50g)" -> 50
 function gramFromName(name){
   var m=String(name).match(/(\d+)\s*g\b/i);
@@ -919,7 +955,7 @@ function autoBackupToFile(arr){
   var d=new Date();
   function p(n){n=String(n);return n.length<2?'0'+n:n;}
   var fn='Márti-foglalás-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'.json';
-  var data={app:'Márti fodrászata', savedAt:fmtDateTime(d), bookings:arr};
+  var data={app:'Márti fodrászata', savedAt:fmtDateTime(d), bookings:arr, chemicals:CHEMICALS};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1785,6 +1821,7 @@ document.getElementById('addNameBtn').onclick=function(){
   renderNevjegyzek();
   toast('Névjegy hozzáadva: '+nm);
 };
+document.getElementById('addChemBtn').onclick=addChemical;
 // ---- Névjegy módosítása / törlése ----
 function editContact(name){
   var all=loadBookings();
@@ -1945,7 +1982,14 @@ document.getElementById('backupFile').addEventListener('change',function(e){
       var data=JSON.parse(rd.result);
       var arr=Array.isArray(data)?data:(data&&data.bookings?data.bookings:null);
       if(!Array.isArray(arr)) throw 0;
-      saveBookings(arr); renderFooldal(); renderNevjegyzek(); refreshStep2();
+      saveBookings(arr);
+      if(data&&Array.isArray(data.chemicals)){
+        CHEMICALS.length=0;
+        data.chemicals.forEach(function(c){CHEMICALS.push(c);});
+        saveChemicals();
+        renderLeltar();
+      }
+      renderFooldal(); renderNevjegyzek(); refreshStep2();
       toast('Visszatöltve: '+arr.length+' foglalás');
     }catch(err){ toast('Hibás mentésfájl!'); }
   };
