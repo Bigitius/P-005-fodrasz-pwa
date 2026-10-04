@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<script>document.documentElement.classList.add(location.protocol==='file:'?'tablet-mode':'web-mode');</script>
+<script>document.documentElement.classList.add((location.protocol!=='http:'&&location.protocol!=='https:')?'tablet-mode':'web-mode');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title id="pageTitle">Márti fodrászata</title>
@@ -362,27 +362,28 @@
   .modal-err{color:var(--bad);font-size:12px;margin-top:8px;min-height:14px}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 26px}
 
-  /* TABLET-MODE: kis kepernyos, file://-kent futo Huawei tablet -- nem erinti az iPad/web valtozatot */
-  .tablet-mode header.top{padding:6px 10px;gap:8px}
-  .tablet-mode .logo{width:26px;height:26px;border-radius:8px}
-  .tablet-mode header.top h1{font-size:14px}
+  /* TABLET-MODE: kis kepernyos, nem http(s)-kent (file:// / content://) futo Huawei tablet -- nem erinti az iPad/web valtozatot */
+  .tablet-mode header.top{padding:8px 12px;gap:10px;flex-wrap:nowrap}
+  .tablet-mode .logo{width:30px;height:30px;border-radius:9px}
+  .tablet-mode header.top h1{font-size:16px}
   .tablet-mode header.top .sub{display:none}
-  .tablet-mode .backup-btn{padding:5px 8px;font-size:11px;min-height:28px;border-radius:8px}
-  .tablet-mode button{min-height:28px}
-  .tablet-mode .tabs{padding:4px 8px 0;gap:5px}
-  .tablet-mode .tab{padding:5px 10px;font-size:12px;border-radius:8px 8px 0 0}
-  .tablet-mode main{padding:0 8px 16px}
-  .tablet-mode .panel{padding:8px}
-  .tablet-mode .day-head{margin-bottom:6px}
-  .tablet-mode .day-head h2{font-size:13px}
-  .tablet-mode .day-nav button{width:26px;height:26px;font-size:13px}
-  .tablet-mode .day-nav .today-btn{padding:0 10px;font-size:11px}
-  .tablet-mode .ROW_H, .tablet-mode .trow{height:40px}
-  .tablet-mode .tcell{min-height:40px}
-  .tablet-mode .tlabel{font-size:10px;padding:4px 4px 0}
-  .tablet-mode .fo-cal{padding:8px;top:0;position:static}
-  .tablet-mode #monthLabel3{font-size:11px}
-  .tablet-mode #foMonth .day{min-height:22px;font-size:10px}
+  .tablet-mode .tabs{padding:0;gap:6px;margin:0 0 0 10px;max-width:none}
+  .tablet-mode .tab{padding:7px 13px;font-size:14px;border-radius:9px;border-bottom:1px solid var(--line)}
+  .tablet-mode .tab.active{box-shadow:none}
+  .tablet-mode .backup-btn{padding:6px 10px;font-size:12px;min-height:30px;border-radius:8px}
+  .tablet-mode button{min-height:30px}
+  .tablet-mode main{padding:0 10px 16px}
+  .tablet-mode .panel{padding:10px}
+  .tablet-mode .day-head{margin-bottom:8px}
+  .tablet-mode .day-head h2{font-size:15px}
+  .tablet-mode .day-nav button{width:28px;height:28px;font-size:14px}
+  .tablet-mode .day-nav .today-btn{padding:0 11px;font-size:12px}
+  .tablet-mode .ROW_H, .tablet-mode .trow{height:44px}
+  .tablet-mode .tcell{min-height:44px}
+  .tablet-mode .tlabel{font-size:11px;padding:5px 5px 0}
+  .tablet-mode .fo-cal{padding:9px;top:0;position:static}
+  .tablet-mode #monthLabel3{font-size:12px}
+  .tablet-mode #foMonth .day{min-height:24px;font-size:11px}
 </style>
 </head>
 <body>
@@ -1959,7 +1960,7 @@ document.getElementById('backupFile').addEventListener('change',function(e){
 // kiserlet utan sem volt megbizhato a regi (2018-as Chrome) Android-tableten
 // -- ezert file:// protokollon MEG NEM IS PROBALKOZUNK vele, igy hibauzenet
 // sem jelenhet meg miatta. HTTP(S)-rol (pl. GitHub Pages) valtozatlanul mukodik.
-if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
+if ((location.protocol === 'http:' || location.protocol === 'https:') && 'serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('service-worker.js').catch(function(err) {
       console.warn('Service worker regisztracio sikertelen:', err);
@@ -1980,7 +1981,7 @@ if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
   // 2026-09-06: helyi fajlkent (file://) megnyitva a gombnak nincs ertelme --
   // ott mar amugy is "offline" fut (nincs halozati fuggoseg), nincs mit
   // letolteni. Inkabb elrejtjuk, mint hogy hibauzenetet mutassunk feleslegesen.
-  if (location.protocol === 'file:') {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') {
     btn.style.display = 'none';
     return;
   }
@@ -2054,6 +2055,22 @@ if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
   }
   document.addEventListener('click', probalZaras, { once: true, passive: true });
   window.addEventListener('load', probalZaras);
+})();
+</script>
+
+<script>
+// Tablet-mode: a fulsor (.tabs) bekerul a fejlecbe, a logo/cim utan es a
+// mentes/visszatoltes gombok ele -- igy egy sorba olvad a fejlec es a
+// fulsor, tobb hely jut az orarendnek. Csak tablet-mode-ban fut, az
+// iPades/web valtozat DOM-jat nem erinti.
+(function () {
+  if (!document.documentElement.classList.contains('tablet-mode')) return;
+  var header = document.querySelector('header.top');
+  var tabs = document.querySelector('.tabs');
+  var elsoGomb = document.getElementById('backupSave');
+  if (header && tabs && elsoGomb) {
+    header.insertBefore(tabs, elsoGomb);
+  }
 })();
 </script>
 </body>
