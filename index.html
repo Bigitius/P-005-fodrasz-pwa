@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
+<script>document.documentElement.classList.add(location.protocol==='file:'?'tablet-mode':'web-mode');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title id="pageTitle">Márti fodrászata</title>
@@ -360,6 +361,28 @@
   .modal-acts .cancel:hover{color:var(--txt);border-color:var(--muted)}
   .modal-err{color:var(--bad);font-size:12px;margin-top:8px;min-height:14px}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 26px}
+
+  /* TABLET-MODE: kis kepernyos, file://-kent futo Huawei tablet -- nem erinti az iPad/web valtozatot */
+  .tablet-mode header.top{padding:6px 10px;gap:8px}
+  .tablet-mode .logo{width:26px;height:26px;border-radius:8px}
+  .tablet-mode header.top h1{font-size:14px}
+  .tablet-mode header.top .sub{display:none}
+  .tablet-mode .backup-btn{padding:5px 8px;font-size:11px;min-height:28px;border-radius:8px}
+  .tablet-mode button{min-height:28px}
+  .tablet-mode .tabs{padding:4px 8px 0;gap:5px}
+  .tablet-mode .tab{padding:5px 10px;font-size:12px;border-radius:8px 8px 0 0}
+  .tablet-mode main{padding:0 8px 16px}
+  .tablet-mode .panel{padding:8px}
+  .tablet-mode .day-head{margin-bottom:6px}
+  .tablet-mode .day-head h2{font-size:13px}
+  .tablet-mode .day-nav button{width:26px;height:26px;font-size:13px}
+  .tablet-mode .day-nav .today-btn{padding:0 10px;font-size:11px}
+  .tablet-mode .ROW_H, .tablet-mode .trow{height:40px}
+  .tablet-mode .tcell{min-height:40px}
+  .tablet-mode .tlabel{font-size:10px;padding:4px 4px 0}
+  .tablet-mode .fo-cal{padding:8px;top:0;position:static}
+  .tablet-mode #monthLabel3{font-size:11px}
+  .tablet-mode #foMonth .day{min-height:22px;font-size:10px}
 </style>
 </head>
 <body>
