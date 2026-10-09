@@ -371,6 +371,11 @@
   .tablet-mode .tab{padding:7px 13px;font-size:14px;border-radius:9px;border-bottom:1px solid var(--line)}
   .tablet-mode .tab.active{box-shadow:none}
   .tablet-mode .backup-btn{padding:6px 10px;font-size:12px;min-height:30px;border-radius:8px}
+  /* 2026-10-09: a Mentes/Visszatoltes gomb tablet-mode-ban elrejtve -- helyet
+     foglaltak a fejlecben, ezert a fulek (.tabs) nem fertek ki egy sorba.
+     Az offlineDownload gomb mar amugy is rejtve van file:// / content://
+     alatt (lasd JS lejjebb) -- igy tablet-mode-ban mindharom gomb rejtve. */
+  .tablet-mode #backupSave, .tablet-mode #backupLoad{display:none}
   .tablet-mode button{min-height:30px}
   .tablet-mode main{padding:0 10px 16px}
   .tablet-mode .panel{padding:10px}
