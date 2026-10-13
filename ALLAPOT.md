@@ -17,7 +17,7 @@ ALLITOTT (nem mertem):
 
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
-- 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben.
+- 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).
 
 ## Kovetkezo lepes (terv)
 - 1. a sorban: uj verzio (a tartalmat a tulajdonos donti el).
