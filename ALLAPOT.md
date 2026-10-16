@@ -51,6 +51,10 @@ MERT (bizonyitek/optimalizalas_2026-10-16.txt, bizonyitek/drive_teszt_4.txt):
 - Halott kód törölve; az ütközés-ellenőrzés 3 másolata egy közös függvény.
 - Független ellenőr: RENDBEN. Megjegyzés: a régi, szétszakadt dupla-párok javítója már csak induláskor és visszatöltés után fut (nem minden rajzolásnál).
 ALLITOTT: a TAB 10 Lite-on nem mért (a gyorsulás aránya ott más lehet).
+
+## Élesítés (2026-10-16)
+MERT: push István jóváhagyásával: origin/main = ac35da0 (helyi = távoli). GitHub Pages build: "built ac35da0". Az élő oldalon: APP_VER="21", service worker "fodrasz-foglalo-v20", drive-sync.js HTTP 200.
+ALLITOTT: a tabletek a következő megnyitáskor (netkapcsolattal) frissülnek — nem ellenőrzött.
 - Ritka eset: ha a Drive-visszatöltéskor a sérült helyi adat félretétele korábban nem sikerült, a sérült nyers tartalom a Drive-ág biztonsági másolatába nem kerül be.
 
 ## Mi nyitott
@@ -58,7 +62,6 @@ ALLITOTT: a TAB 10 Lite-on nem mért (a gyorsulás aránya ott más lehet).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).
 
 - 2026-10-16 -- Drive-mentés: OAuth kliensazonosító létrehozása (Google Cloud), beírása a drive-config.js-be, valódi próba a TAB 10 Lite-on.
-- 2026-10-16 -- Push a GitHubra (= élesítés a GitHub Pages-en) még nem történt; István dönt.
 - 2026-10-16 -- Kérdés: a leltár alap "próba kódjai" (K001–K003, 500 g) maradjanak-e friss telepítésnél.
 - 2026-10-16 -- Igazságforrás: a Drive-mentés a GitHub index.html-re épült, a Drive-on lévő `index.v2.html`-lel nincs összefésülve.
 
