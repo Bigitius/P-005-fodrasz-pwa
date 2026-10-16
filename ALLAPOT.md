@@ -40,7 +40,17 @@ MERT (bizonyitek/audit_2026-10-16.txt, bizonyitek/hibajavitas_2026-10-16.txt, bi
 - Teljesítmény-alapmérés (javítás előtt): bizonyitek/teljesitmeny_elotte.txt — leglassabb az időpont-rács (23,5 ms asztali gépen, 2000 foglalással).
 ALLITOTT / nem mért:
 - A TAB 10 Lite-on nem próbált; a valódi (nem helyettesített) felugró ablakok kézi kipróbálása Istváné.
-- Optimalizálás (számolások összevonása, nagyobb gombok, halott kód, kevesebb Drive-kérés) NINCS elvégezve — külön jóváhagyásra vár.
+
+## Optimalizálás (2026-10-16, app v21, SW-cache v20)
+MERT (bizonyitek/optimalizalas_2026-10-16.txt, bizonyitek/drive_teszt_4.txt):
+- Mintaadat kivéve (Teszt 15p + 5 kitalált névjegy) — tulajdonosi döntés. A korábbi telepítéseken bent lévők kézzel törölhetők.
+- Gyorsulás asztali gépen, 2000 foglalással: időpont-rács 23,5 → 1,6 ms; Főoldal 6,5 → 3,2 ms; Névjegyzék 12,7 → 2,3 ms.
+- Drive: szokásos mentés 6 → 4 hálózati kérés (ugyanazzal a teszttel mérve); mock-teszt 17/17.
+- Nagyobb kártyagombok (36 px; 15 perces kártyán 28 px), a szöveg nem fut alájuk (1280x800-on mérve).
+- Próba közben talált RÉGI hiba javítva: új festésnél üres maradt a vegyszerkód, így a leltárból nem vonódott le.
+- Halott kód törölve; az ütközés-ellenőrzés 3 másolata egy közös függvény.
+- Független ellenőr: RENDBEN. Megjegyzés: a régi, szétszakadt dupla-párok javítója már csak induláskor és visszatöltés után fut (nem minden rajzolásnál).
+ALLITOTT: a TAB 10 Lite-on nem mért (a gyorsulás aránya ott más lehet).
 - Ritka eset: ha a Drive-visszatöltéskor a sérült helyi adat félretétele korábban nem sikerült, a sérült nyers tartalom a Drive-ág biztonsági másolatába nem kerül be.
 
 ## Mi nyitott
@@ -48,9 +58,8 @@ ALLITOTT / nem mért:
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).
 
 - 2026-10-16 -- Drive-mentés: OAuth kliensazonosító létrehozása (Google Cloud), beírása a drive-config.js-be, valódi próba a TAB 10 Lite-on.
-- 2026-10-16 -- Döntés kell: maradjon-e a friss telepítéskori mintaadat (Teszt 15p + 5 kitalált névjegy).
-- 2026-10-16 -- Optimalizálás (audit-terv C pontja) jóváhagyásra vár.
-- 2026-10-16 -- Commit: a Drive-mentés, a leltár szerkesztés/törlés és a hibajavítás commitolatlan.
+- 2026-10-16 -- Push a GitHubra (= élesítés a GitHub Pages-en) még nem történt; István dönt.
+- 2026-10-16 -- Kérdés: a leltár alap "próba kódjai" (K001–K003, 500 g) maradjanak-e friss telepítésnél.
 - 2026-10-16 -- Igazságforrás: a Drive-mentés a GitHub index.html-re épült, a Drive-on lévő `index.v2.html`-lel nincs összefésülve.
 
 ## Kovetkezo lepes (terv)

@@ -360,6 +360,13 @@
   .modal-acts .cancel{background:transparent;color:var(--muted)}
   .modal-acts .cancel:hover{color:var(--txt);border-color:var(--muted)}
   .modal-err{color:var(--bad);font-size:12px;margin-top:8px;min-height:14px}
+  /* 2026-10-16, TAB 10 Lite: nagyobb érintési felület a kártyák ✏️ / 🗑 / D gombjain */
+  .appt .acts{gap:6px}
+  .appt .acts button{font-size:15px;min-width:42px;min-height:36px;padding:4px 8px}
+  .appt.short .acts button{min-height:28px;padding:1px 8px;font-size:13px}
+  /* a szöveg ne fusson a gombok alá: 2 gomb (✏️ 🗑) ~ 90px, 3 gomb (D ✏️ 🗑) ~ 138px */
+  .appt .sv,.appt .nm,.appt .seg,.appt .chem-line{padding-right:104px}
+  .appt.harom .sv,.appt.harom .nm,.appt.harom .seg,.appt.harom .chem-line{padding-right:150px}
   .chem-act{display:flex;gap:8px;margin-top:10px}
   .chem-act button{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:14px;cursor:pointer}
   .chem-act .chem-del{border-color:var(--bad)}
@@ -674,14 +681,6 @@ function fullServiceName(svcName){
 // a foglalásban tárolt EGYÉRTELMŰ szolgáltatásnév: "Kategória — Variáns"
 function svcId(cat,name){ return String(name).indexOf('—')>=0 ? name : (cat+' — '+name); }
 function svcFullId(s){ if(!s) return ''; return s.cat ? svcId(s.cat, s.name) : s.name; }
-// szín világosítása (f>0) / sötétítése (f<0)
-function shadeHex(hex,f){
-  hex=hex.replace('#','');
-  var r=parseInt(hex.substr(0,2),16), g=parseInt(hex.substr(2,2),16), b=parseInt(hex.substr(4,2),16);
-  var t=f<0?0:255, q=Math.abs(f);
-  var h=function(x){x=Math.max(0,Math.min(255,Math.round((t-x)*q)+x));return ('0'+x.toString(16)).slice(-2);};
-  return '#'+h(r)+h(g)+h(b);
-}
 // variáns-színkiosztás kategóriánként: kontrasztos színek, sosem a kategória (csík) színcsaládja
 var VARI_MAP = {
   "Vágás & Szárítás":      [1,2,3,4,7],       // cián, pink, borostyán, zöld, okker
@@ -818,14 +817,23 @@ function defaultChemCode(){
   return best || (CHEMICALS[0]&&CHEMICALS[0].code) || '';
 }
 // leltár maradék számítása: start - (elkészült foglalások grammja adott kódból)
+// A felhasználás-összesítő egyszer készül el a tárolt szövegből, és csak akkor számolódik újra,
+// ha a tárolt foglalások változtak (korábban MINDEN kártya × MINDEN anyag újraolvasta a teljes listát).
+var _hasznalat={nyers:undefined, map:{}};
+function chemHasznalat(){
+  var nyers=null; try{ nyers=localStorage.getItem(STORAGE_KEY); }catch(e){}
+  if(nyers!==_hasznalat.nyers){
+    var map={};
+    loadBookings().forEach(function(b){
+      if(b.chemCode && b.done && b.chemGram){ map[b.chemCode]=(map[b.chemCode]||0)+(parseInt(b.chemGram,10)||0); }
+    });
+    _hasznalat={nyers:nyers, map:map};
+  }
+  return _hasznalat.map;
+}
 function chemRemaining(code){
   var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return 0;
-  var all=loadBookings();
-  var used=0;
-  all.forEach(function(b){
-    if(b.chemCode===code && b.done && b.chemGram){ used += parseInt(b.chemGram,10)||0; }
-  });
-  return c.start - used;
+  return c.start - (chemHasznalat()[code]||0);
 }
 // szolgáltatás kiválasztott kódjának eltárolása a foglalásban (bkId alapján)
 // egy meglévő "A" foglaláshoz: milyen "B" festések tehetők rá, milyen irányban?
@@ -1017,7 +1025,7 @@ function adatCsere(ujB, ujC, mentB, mentC){
     CHEMICALS.length=0; ujC.forEach(function(c){CHEMICALS.push(c);});
     ok=mentC();
   }
-  if(ok){ adathibaTorol(); return true; }
+  if(ok){ adathibaTorol(); fixDuplaPairs(); return true; }
   try{
     if(regiB===null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, regiB);
     if(regiC===null) localStorage.removeItem(CHEM_KEY); else localStorage.setItem(CHEM_KEY, regiC);
@@ -1076,30 +1084,30 @@ function nyitvaHiba(time, dur){
 }
 // 30 perces napi idősávok 9:00 - 18:00
 function daySlots(){var s=[],m=9*60;while(m<18*60){s.push(fmtTime(m));m+=30;}return s;}
-// induló időpontok a foglaláshoz (9:00 - 17:30)
-function startSlots(){var s=[],m=9*60;while(m<=17*60+30){s.push(fmtTime(m));m+=30;}return s;}
 
 // ütközés: egy új foglalás (date,time,dur,serviceObj) csak akkor szabad, ha
 //  a MUNKA-részei nem metszenek más foglalás MUNKA-részeit.
 //  A pihentetés (p) rész NEM számít ütközésnek — oda bármelyik másik foglalás mehet.
-function isSlotFree(date,time,dur,serviceObj){
+// KÖZÖS ütközés-keresés (korábban 3 külön másolatban élt): az első olyan foglalás, amelynek
+// munkarésze metszi az új foglalás munkarészét. bks: előre betöltött lista (ha nincs: betölti),
+// kihagy(x): igaz, ha x-et ki kell hagyni (pl. a szerkesztett saját foglalás).
+function utkozoFoglalas(date,time,serviceObj,bks,kihagy){
   var st=parseTime(time);
-  // az új foglalás munkaszegmensei
-  var newSegs=segmentsOf(serviceObj).filter(function(s){return s.type==='m';});
-  var newWork=newSegs.map(function(s){return {s:st+s.off, e:st+s.off+s.d};});
-  var b=loadBookings();
+  var newWork=segmentsOf(serviceObj).filter(function(s){return s.type==='m';})
+    .map(function(s){return {s:st+s.off, e:st+s.off+s.d};});
+  var b=bks||loadBookings();
   for(var i=0;i<b.length;i++){
-    if(b[i].date!==date) continue;
     var bk=b[i];
+    if(bk.date!==date || (kihagy && kihagy(bk))) continue;
     if(!bk.serviceObj) bk.serviceObj=findService(bk.service);
     var exWork=workIntervals(bk);
-    for(var w=0;w<newWork.length;w++){
-      var nw=newWork[w];
-      for(var x=0;x<exWork.length;x++){ if(nw.s<exWork[x].e && exWork[x].s<nw.e) return false; }
-    }
+    for(var w=0;w<newWork.length;w++)
+      for(var x=0;x<exWork.length;x++)
+        if(newWork[w].s<exWork[x].e && exWork[x].s<newWork[w].e) return bk;
   }
-  return true;
+  return null;
 }
+function isSlotFree(date,time,dur,serviceObj,bks){ return !utkozoFoglalas(date,time,serviceObj,bks); }
 
 // ============================================================================
 // ÁLLAPOT
@@ -1135,11 +1143,11 @@ function renderFoMonth(){
   var y=foMonthView.getFullYear(),mo=foMonthView.getMonth();
   var first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(); // hétfő-kezdésű hét
   var todayIso=fmtDate(new Date()), selIso=fmtDate(foMainDate);
-  var bks=loadBookings();
+  var napok={}; loadBookings().forEach(function(x){ if(x.date) napok[x.date]=true; });
   var html='';for(var b=0;b<first;b++)html+='<div class="day empty"></div>';
   for(var d=1;d<=dim;d++){
     var dt=new Date(y,mo,d),iso=fmtDate(dt);
-    var has=bks.some(x=>x.date===iso);
+    var has=!!napok[iso];
     var cls='day'+(selIso===iso?' sel':'')+(iso===todayIso?' today':'');
     var cb=has?'<span class="cb">●</span>':'';
     html+='<div class="'+cls+'" data-date="'+iso+'">'+d+cb+'</div>';
@@ -1300,7 +1308,7 @@ function buildApptCards(bks){
       '<button class="ed" onclick="openEditById(\''+jsArg(wid)+'\')">✏️</button>'+
       '<button class="dl" onclick="deleteById(\''+jsArg(wid)+'\')">🗑</button></div>';
     var bg=variBg(col);
-    appts+='<div class="appt'+(h<48?' short':'')+'" style="top:'+top+'px;height:'+h+'px;background:'+bg+';color:'+variTxt(col)+';border-left:38px solid '+col.cat.a+';padding-left:14px">'+inner+'</div>';
+    appts+='<div class="appt'+(h<48?' short':'')+(dupBtn?' harom':'')+'" style="top:'+top+'px;height:'+h+'px;background:'+bg+';color:'+variTxt(col)+';border-left:38px solid '+col.cat.a+';padding-left:14px">'+inner+'</div>';
   });
   return appts;
 }
@@ -1309,7 +1317,7 @@ function renderFooldal(){
   document.getElementById('foDateLabel').textContent =
     foMainDate.toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
   var iso=fmtDate(foMainDate);
-  fixDuplaPairs();          // régebbi szétszakadt dupla-párok összekapcsolása
+  // (a régi szétszakadt dupla-párok javítása 2026-10-16 óta csak induláskor és visszatöltés után fut)
   var bks=loadBookings().filter(b=>b.date===iso);
   var wrap=document.getElementById('foTimeline');
   var slots=daySlots();
@@ -1378,15 +1386,6 @@ function renderStep1(body){
 }
 
 // 2) Kezdési időpont — ugyanaz a 30 perces napi órarend, mint a Főoldalon
-function bkCardHtml(bk){
-  if(!bk.serviceObj) bk.serviceObj=findService(bk.service);
-  var col=serviceColor(bk.service);
-  var en=fmtTime(parseTime(bk.time)+bk.dur);
-  var badges=(bk.serviceObj&&bk.serviceObj.seg)?'<div class="seg">'+segBadges(bk.serviceObj)+'</div>':'';
-  return '<div class="bk-card" style="background:'+variBg(col)+';color:'+variTxt(col)+';border-left:38px solid '+col.cat.a+';padding-left:14px">'+
-         '<div class="nm">'+escapeHtml(bk.name)+
-         '</div><div class="sv">'+escapeHtml(bk.service)+' · '+bk.time+'-'+en+'</div>'+badges+'</div>';
-}
 // ha épp a Foglalás 2. lépése látszik, frissítjük (szerkesztés/törlés/dupla után)
 function refreshStep2(){ if(bookingStep===2 && selDate) renderFoglalas(); }
 function renderStep2(body){
@@ -1398,7 +1397,7 @@ function renderStep2(body){
   var slots=daySlots();
   for(var i=0;i<slots.length;i++){
     var t=slots[i];
-    var free=isSlotFree(selDate,t,30,{dur:30});
+    var free=isSlotFree(selDate,t,30,{dur:30},bks);
     html+='<div class="trow"><div class="tlabel">'+t+'</div>'+
           '<div class="tcell'+(free?' clickable':'')+(selTime===t?' selcell':'')+'"'+(free?' data-t="'+t+'"':'')+'>'+
           (free?'<span class="free-hint">szabad — kattints</span>':'')+'</div></div>';
@@ -1413,22 +1412,6 @@ function renderStep2(body){
     setStep(3);
   });
   document.getElementById('b2').onclick=()=>setStep(1);
-}
-// visszaadja a pihentetési ablakot (start,len,owner) ha a megadott időpont (st perc) benne van
-function restWindowAt(bks, st){
-  for(var i=0;i<bks.length;i++){
-    var b=bks[i];
-    if(!b.serviceObj) b.serviceObj=findService(b.service);
-    var segs=segmentsOf(b.serviceObj);
-    for(var si=0;si<segs.length;si++){
-      var seg=segs[si];
-      if(seg.type!=='p') continue;
-      var ss=parseTime(b.time)+seg.off;
-      // csak a pihentetés pontos kezdetét adjuk vissza (ez a kattintható sáv)
-      if(st===ss) return {start:ss, len:seg.d, owner:escapeHtml(b.name), ownerId:bkId(b)};
-    }
-  }
-  return null;
 }
 
 // 3) Szolgáltatás - kétszintes: kategóriák, majd variánsok
@@ -1561,7 +1544,9 @@ function renderStep4(body){
   if(bfP){ bfP.value=regPickedPhone; bfP.addEventListener('input',function(){regPickedPhone=this.value;regPickedName=bfN?bfN.value:regPickedName;}); }
   // vegyszer mezők visszaírása
   var bfC=document.getElementById('bfChem'), bfG=document.getElementById('bfGram');
-  if(bfC){ bfC.value=regChemCode; bfC.addEventListener('change',function(){regChemCode=this.value;}); }
+  // 2026-10-16 javítás: ha még nem választottak kódot, az alapértelmezett (legtöbb maradék) legyen kiválasztva --
+  // korábban üres érték ment el, és az "elkészült" foglalás anyaga nem vonódott le a leltárból
+  if(bfC){ bfC.value=regChemCode||defaultChemCode(); bfC.addEventListener('change',function(){regChemCode=this.value;}); }
   if(bfG){ bfG.value=(regChemGram!==''?regChemGram:gramFromName(s.name)); bfG.addEventListener('input',function(){regChemGram=this.value;}); }
   // betű kattintás
   body.querySelectorAll('.ltr[data-l]').forEach(function(e){
@@ -1694,23 +1679,8 @@ function saveEdit(){
     var nyH=nyitvaHiba(time, serviceObj.dur);
     if(nyH){ document.getElementById('edErr').textContent=nyH; return; }
     // ütközés ellenőrzése: a SAJÁT foglalást kihagyjuk
-    var st=parseTime(time);
-    var newSegs=segmentsOf(serviceObj).filter(function(s){return s.type==='m';});
-    var newWork=newSegs.map(function(s){return {s:st+s.off, e:st+s.off+s.d};});
-    var allC=loadBookings();
-    for(var i=0;i<allC.length;i++){
-      if(isSelf(allC[i])) continue;
-      if(allC[i].date!==date) continue;
-      var exWork=workIntervals(allC[i]);
-      for(var w=0;w<newWork.length;w++){
-        for(var x=0;x<exWork.length;x++){
-          if(newWork[w].s<exWork[x].e && exWork[x].s<newWork[w].e){
-            document.getElementById('edErr').textContent='Ez az időpont már foglalt: '+allC[i].name+' · '+allC[i].service;
-            return;
-          }
-        }
-      }
-    }
+    var ut=utkozoFoglalas(date,time,serviceObj,null,isSelf);
+    if(ut){ document.getElementById('edErr').textContent='Ez az időpont már foglalt: '+ut.name+' · '+ut.service; return; }
   }
   var all=loadBookings();
   // frissítés: az 'all' tömbben levő saját példányt frissítjük (ownId alapján)
@@ -1904,23 +1874,7 @@ function confirmDupla(Bname, e, u, dir){
 }
 
 // visszaadja az ütköző foglalást (ha van), különben null
-function findConflict(date,time,dur,serviceObj){
-  var st=parseTime(time);
-  var newSegs=segmentsOf(serviceObj).filter(function(s){return s.type==='m';});
-  var newWork=newSegs.map(function(s){return {s:st+s.off, e:st+s.off+s.d};});
-  var b=loadBookings();
-  for(var i=0;i<b.length;i++){
-    if(b[i].date!==date) continue;
-    var bk=b[i];
-    if(!bk.serviceObj) bk.serviceObj=findService(bk.service);
-    var exWork=workIntervals(bk);
-    for(var w=0;w<newWork.length;w++){
-      var nw=newWork[w];
-      for(var x=0;x<exWork.length;x++){ if(nw.s<exWork[x].e && exWork[x].s<nw.e) return bk; }
-    }
-  }
-  return null;
-}
+function findConflict(date,time,dur,serviceObj){ return utkozoFoglalas(date,time,serviceObj); }
 
 // ============================================================================
 // NÉVJEGYZÉK
@@ -1989,10 +1943,12 @@ function renderNevjegyzek(){
     detail.innerHTML='';
     return;
   }
+  // név -> {foglalás-szám, van-e névjegy} egyetlen bejárással (korábban nevenként a teljes listát szűrte)
+  var stat={};
+  bks.forEach(function(b){ if(!b.name) return; var s=stat[b.name]||(stat[b.name]={c:0,nj:false}); if(b.contact) s.nj=true; else s.c++; });
   list.innerHTML=names.map(n=>{
-    var bs=bks.filter(function(b){return b.name===n;});
-    var c=bs.filter(function(b){return !b.contact;}).length;
-    var isContact=bs.some(function(b){return b.contact;}) && c===0;
+    var c=stat[n].c;
+    var isContact=stat[n].nj && c===0;
     var ini=n.trim().charAt(0).toUpperCase();
     return '<div class="name-item'+(regName===n?' sel':'')+'" data-n="'+escapeHtml(n)+'">'+
       '<div class="ava">'+escapeHtml(ini)+'</div><div><div>'+escapeHtml(n)+'</div>'+
@@ -2088,46 +2044,16 @@ document.addEventListener('click',function(e){
   if(t.classList.contains('chem-edit')) editChemical(code); else deleteChemical(code);
 });
 
-// MINTAADAT csak a legelső indításkor (üres tároló) kerül be -- 2026-10-16 javítás:
-// korábban minden indításkor visszakerültek a törölt minták, és sérült adatnál a minta
-// írta felül a sérült (de még menthető) tartalmat.
-var FRISS_TELEPITES = (function(){ try{ return localStorage.getItem(STORAGE_KEY)===null; }catch(e){ return false; } })();
-// IDEIGLENES 15p teszt a kártya ellenőrzéséhez (törölhető a Névjegyzék fülön)
-(function seedDemo(){
-  if(!FRISS_TELEPITES || adathibaVan()) return;
-  var d=fmtDate(new Date());
-  var all=loadBookings();
-  if(all.length===0){
-    var svc=findService('Alap (15 perc)')||{dur:15,cat:null};
-    all.push({date:d,time:'10:00',dur:svc.dur,service:svc.name,serviceObj:svc,name:'Teszt 15p',phone:'+36 30 111 2222',uid:'test15'});
-    saveBookings(all);
-  }
-})();
+// 2026-10-16: a mintaadat (Teszt 15p foglalás + 5 kitalált névjegy) kivéve a tulajdonos döntése alapján;
+// a korábbi telepítéseken bent lévők a Névjegyzék fülön kézzel törölhetők.
 
-// 5 névjegy (időpont nélkül) — egyszeri seed, nem duplázódik
-(function seedContacts(){
-  if(!FRISS_TELEPITES || adathibaVan()) return;
-  var all=loadBookings();
-  var seed=[
-    {name:'Tóth Evelin', phone:'+36 20 311 2244'},
-    {name:'Szabó Roland', phone:'+36 70 522 8819'},
-    {name:'Horváth Luca', phone:'+36 30 644 1037'},
-    {name:'Kiss Márton', phone:'+36 20 955 7722'},
-    {name:'Varga Nikolett', phone:'+36 70 188 4455'}
-  ];
-  seed.forEach(function(c){
-    if(!all.some(function(b){return b.name===c.name && b.contact;})){
-      all.push({name:c.name, phone:c.phone, date:'', time:'', dur:0, service:'', serviceObj:null, contact:true});
-    }
-  });
-  saveBookings(all);
-})();
+fixDuplaPairs();          // régebbi szétszakadt dupla-párok összekapcsolása (egyszer, induláskor)
 
 renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="20";
+var APP_VER="21";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;

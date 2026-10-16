@@ -207,5 +207,20 @@ await teszt('serult helyi adat (tiltva): nincs feltoltes, hangos hiba, dirty mar
   assert.equal(d.hivasok.length, 0); assert.equal(ds.allapot().dirty, true);
 });
 
+await teszt('halozati kerelmek szama: egy szokasos (aznapi masodik) mentes legfeljebb 4 keres', async () => {
+  const d = mockDrive(); const k = keszit(d);
+  ido = new Date('2026-10-20T10:00:00Z');
+  k.ds.markDirty(); await k.ds.szinkron();
+  ido = new Date('2026-10-20T10:05:00Z');
+  k.setAdat({ bookings: [{ uid: 'y' }], chemicals: [] }); k.ds.markDirty(); await k.ds.szinkron();   // a nap elso felulirasa: + napi masolat
+  ido = new Date('2026-10-20T10:10:00Z');
+  const elotte = d.hivasok.length;
+  k.setAdat({ bookings: [{ uid: 'x' }], chemicals: [] }); k.ds.markDirty(); await k.ds.szinkron();
+  assert.equal(k.utolso().kind, 'mentve');
+  const most = d.hivasok.slice(elotte);
+  assert.ok(most.length <= 4, 'kerelmek: ' + most.join(', '));
+  console.log('        (kerelmek: ' + most.length + ' -> ' + most.join(', ') + ')');
+});
+
 globalThis.fetch = valodiFetch;
 console.log(process.exitCode ? 'BUKOTT' : 'MIND ZOLD: ' + futott + ' teszt');

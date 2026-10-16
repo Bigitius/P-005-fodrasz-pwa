@@ -74,7 +74,7 @@
     function esc(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 
     async function listaz(token, kerdes) {
-      var url = API + '?q=' + q(kerdes) + '&fields=' + q('files(id,name,modifiedTime,appProperties)') + '&pageSize=100&spaces=drive';
+      var url = API + '?q=' + q(kerdes) + '&fields=' + q('files(id,name,modifiedTime,appProperties)') + '&pageSize=1000&spaces=drive';
       var r = await api(token, url, {}, 'Drive lista');
       return (await r.json()).files || [];
     }
@@ -133,8 +133,10 @@
         if (!token) { jelez('belepes', 'Drive: be kell jelentkezni'); return; }
 
         var mappaId = await mappa(token, true);
-        var fajlok = await listaz(token, "name='" + FO_FAJL + "' and '" + esc(mappaId) + "' in parents and trashed=false");
-        var fo = fajlok[0] || null;
+        // egyetlen listazas a mappa teljes tartalmarol: ebbol jon a fo fajl ES a napi masolatok is
+        // (korabban 3 kulon lekerdezes volt)
+        var tartalomLista = await listaz(token, "'" + esc(mappaId) + "' in parents and trashed=false");
+        var fo = tartalomLista.filter(function (x) { return x.name === FO_FAJL; })[0] || null;
 
         if (fo && !opts.felulir && fo.modifiedTime !== st.lastSyncedModified) {
           jelez('konfliktus', 'Drive: a Drive-on más (újabb vagy ismeretlen) mentés van — nem írtam felül',
@@ -143,7 +145,7 @@
         }
 
         if (fo) {
-          await napiMasolat(token, fo, mappaId);
+          await napiMasolat(token, fo, mappaId, tartalomLista);
           // kifejezett felulirasnal (ütközés-döntés, régi másolat visszatöltése) a Drive-on lévő
           // legfrissebb állapot külön, egyedi nevű másolatba megy, hogy semmi ne vesszen el
           if (opts.felulir || st.eloMasolat) {
@@ -192,17 +194,18 @@
       }
     }
 
-    async function napiMasolat(token, fo, mappaId) {
+    async function napiMasolat(token, fo, mappaId, tartalomLista) {
       var nap = napStr(new Date(fo.modifiedTime));
       var nev = NAPI_ELO + nap + '.json';
-      var van = await listaz(token, "name='" + nev + "' and '" + esc(mappaId) + "' in parents and trashed=false");
-      if (!van.length) {
-        await api(token, API + '/' + fo.id + '/copy?fields=id', {
+      var mind = tartalomLista.filter(function (x) { return x.name.indexOf(NAPI_ELO) === 0; });
+      if (!mind.some(function (x) { return x.name === nev; })) {
+        var r = await api(token, API + '/' + fo.id + '/copy?fields=id', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: nev, parents: [mappaId] })
         }, 'Napi masolat');
+        mind.push({ id: (await r.json()).id, name: nev });
       }
-      var mind = (await listaz(token, "'" + esc(mappaId) + "' in parents and trashed=false")).filter(function (x) { return x.name.indexOf(NAPI_ELO) === 0; });
+      // ritkitas csak akkor, ha tobb masolat van a megengedettnel (kulonben nincs extra keres)
       mind.sort(function (a, b) { return a.name < b.name ? 1 : -1; });
       for (var i = MAX_NAPI; i < mind.length; i++) {
         // kukaba, nem vegleges torles
