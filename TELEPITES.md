@@ -123,6 +123,32 @@ korábbi hiba oka is eltűnik.
    app, a "📂 Visszatöltés" gombbal ebből a fájlból mentesen visszaállítható
    minden adat.
 
+## 9. lépés – Automatikus mentés Google Drive-ra (TAB 10 Lite, https-ről)
+
+Ez csak akkor működik, ha az app a GitHub Pages címről fut (https), helyi
+fájlként (file://) nem — ott a gomb el van rejtve.
+
+Egyszeri beállítás (a tulajdonos végzi, Google Cloud Console):
+1. Új projekt, "Google Drive API" bekapcsolása.
+2. OAuth hozzájárulási képernyő (External), a saját Google-fiók felvéve tesztfelhasználónak.
+3. Hitelesítő adatok → OAuth ügyfélazonosító → "Web application"; engedélyezett
+   JavaScript origin: a GitHub Pages cím (pl. `https://felhasznalo.github.io`).
+4. A kapott ügyfélazonosítót (nem titok) a `drive-config.js` fájlba kell írni
+   (`window.DRIVE_CLIENT_ID`). Jelszó, token vagy kulcs SOHA nem kerül a fájlba.
+
+Használat:
+- A fejlécben a "☁ Drive" gomb mutatja az állapotot: mentve / nincs net, vár /
+  be kell jelentkezni / HIBA / ütközés. Ha hiba van, piros.
+- Az app a Drive-on egy "Fodrasz-adatok" mappába ment: `fodrasz-adatok.json`
+  (mindig a legutóbbi) és naponta egy előző-napi másolat (legfeljebb 10).
+- Net nélkül a mentés vár; ha a net visszajön (vagy megnyitod az appot), magától feltölt.
+- Új vagy javított tableten: bejelentkezés → "Visszatöltés Drive-ról…" →
+  válaszd ki a mentést. A tabletről előtte helyi biztonsági másolat készül.
+- Ha a Drive-on más mentés van, mint amit a tablet utoljára látott, az app NEM ír
+  felül, hanem rákérdez (ez védi az adatot, ha egy új, üres tablet indul).
+- Korlát: a Google-belépés kb. óránként lejár; ilyenkor a gomb "be kell
+  jelentkezni" jelzést ad, egy érintéssel megújítható.
+
 <!-- frissites: v2 telepites inditasa 2026-07-18 -->
 <!-- frissites: v3 Huawei MediaPad T3 tablet-tamogatas (7. lepes) 2026-08-23 -->
 <!-- frissites: v4 helyi fajlkent (file://, szerver nelkul) telepitesi

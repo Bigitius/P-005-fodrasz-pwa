@@ -1,0 +1,8 @@
+Teljesitmeny-alapmeres (optimalizalas ELOTT), 2026-10-16, asztali Chrome (Browser pane), localhost:8765
+Eszkoz: teszt/teljesitmeny.js; 2000 kitalalt foglalas, utana a tarolo visszaallitva (visszaallt: true)
+loadBookings (2000 db): 0.9 ms
+renderFooldal: 6.5 ms
+renderStep2 (idopont-racs): 23.5 ms
+renderNevjegyzek: 12.7 ms
+renderLeltar: 3.9 ms
+Megjegyzes: a TAB 10 Lite CPU-ja lassabb az asztali gepnel; a szorzo NEM mert.

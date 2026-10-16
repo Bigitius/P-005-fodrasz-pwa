@@ -1,0 +1,11 @@
+Kod-audit, 2026-10-16 -- bongeszoben (localhost:8765, Browser pane) MERT leletek, a tarolo utana visszaallitva.
+
+1) Serult tarolo-tartalom ('[{"name":"Fontos adat"' -- csonka JSON) + ujratoltes
+   -> a tarolo tartalma ujratoltes utan: [{"date":"2026-10-16","time":"10:00",...,"Alap (15 perc)"...  (a "Teszt 15p" mintafoglalas)
+   -> az eredeti adat nyom nelkul eltunt, hibauzenet nem volt.
+2) deleteContact('Tóth Evelin') utan: torles_utan_van=false; ujratoltes utan: ujratoltes_utan_visszajott=true
+   -> a minta-nevjegyek nem torolhetok (seedContacts minden inditaskor visszarakja).
+3) Nev aposztroffal ("D'Arc Johanna"): onclick = openEditById('2026-10-16|12:00|...|D'Arc Johanna')
+   -> szerkeszto_megnyilt=false (a gomb nem mukodik; ugyanez a torles gombra).
+4) Szerkesztett foglalas 07:00-ra: kartya top=-279 px, lathato=false
+   -> a nyitvatartason (9-18) kivulre tett foglalas eltunik a Fooldalrol.

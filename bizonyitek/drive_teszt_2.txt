@@ -1,0 +1,16 @@
+  OK    elso mentes: mappa+fajl letrejon, visszaolvasas egyezik, tiszta
+  OK    offline: nincs halozati hivas, "offline" allapot, dirty marad; netre varas utan feltolt
+  OK    nincs token: "belepes" allapot, nincs Drive-hivas, dirty marad
+  OK    401: "belepes", nem csendes hiba
+  OK    500: HANGOS hiba, dirty marad
+  OK    visszaolvasas elter: hiba, NEM "mentve", dirty marad
+  OK    masik eszkoz mentett utana: KONFLIKTUS, a Drive-fajl nem valtozik
+  OK    uj/ures tablet, a Drive-on van mentes: KONFLIKTUS, nem irja felul
+  OK    visszatoltes: lista+elonezet+alkalmaz, helyi biztonsagi masolat keszul
+  OK    hibas Drive-fajl: nem tolti vissza
+  OK    napi masolat + legfeljebb 10 marad (a tobbi kukaba, nem torolve)
+  OK    tarolo-hiba az allapotmentesnel: hangos hiba
+  OK    felulires (konfliktus-dontes): a Drive-on levo legfrissebb allapot egyedi masolatba kerul, akkor is ha a mai masolat mar letezik
+  OK    regi napi masolat visszatoltese: a jelenlegi Drive-fo-fajl elotte masolatba kerul
+  OK    markDirty szinkron KOZBEN: nem lesz tisztanak jelolve, az ujabb modositas nem vész el
+MIND ZOLD: 15 teszt

@@ -1,0 +1,27 @@
+Hibajavitas ellenorzese, 2026-10-16 -- bongeszoben (localhost:8765, app v20), a tarolo a vegen visszaallitva (visszaallitva: true).
+Ablakok (alert/confirm/prompt) a proba alatt helyettesitve; a hivasok naplozva.
+
+1) Serult tarolo ('[{"name":"Fontos adat"') + ujratoltes:
+   eredeti_kulcs_valtozatlan: true
+   felreteve: fodrasz_foglalasok_v1_SERULT_2026-10-16-13-13-18 = [{"name":"Fontos adat"
+   piros sav (display: block): "⚠ A tárolt adat sérült (nem olvasható). A sérült tartalom félretéve: ... Tölts vissza mentésből (📂 Visszatöltés vagy ☁ Drive)."
+2) Fajlbol visszatoltes (mentes.json, 1 foglalas):
+   hivasok: ["confirm:Visszatöltés fájlból: mentes.json"]; utana foglalasok: ["D'Arc Johanna uid:van"]
+   biztonsagi masolat tartalmazza a serult nyers adatot: [{"name":"Fontos adat"; piros sav: none
+3) Aposztrofos nev: aposztrof_szerkeszto_megnyilt: true
+4) Nyitvatartas: 07:00 -> "A foglalás nem kezdődhet nyitás (9:00) előtt!"; 17:45 (30p) -> "A foglalás nem nyúlhat zárás (18:00) utánra! (vége: 18:15)"; ido_valtozatlan: 10:00
+   Regi, kivul eso foglalas: figyelmezteto sav "⚠ Nyitvatartáson kívüli foglalás ... 07:00 Korai · ..."
+5) Ket azonos adatu foglalas (uid iker1, iker2), deleteById('iker1') -> maradt: ["iker2"]
+6) Mentesi hiba (setItem szimulalt QuotaExceededError): visszateres false, hivasok: "alert:MENTÉS SIKERTELEN (foglalások): QuotaExceededError (szimulált)"
+7) Mintaadat: meglevo tarolonal ujratoltes utan mintanevjegy_visszajott: false, teszt15_visszajott: false;
+   ures tarolonal (friss telepites) a mintak bekerulnek: Teszt 15p + 5 nevjegy (szandekos, a tulajdonos donti el, maradjanak-e).
+8) Dz/Dzs csoport: Dzsenifer a Dz-ben: false, a Dzs-ben: true; Dzurban a Dz-ben: true
+Konzol: a listazott 3 SyntaxError bejegyzes a korabbi (javitas elotti) betoltesekbol es az audit-proba kattintasabol maradt; a konzolt a Browser pane nem uriti.
+
+--- Fuggetlen ellenor (2026-10-16) utani javitasok, ujra mert (tarolo utana visszaallitva: true) ---
+9) Regi, nyitvatartason kivuli (07:30) grammos foglalas: kesz-jeloles + 55 g mentese idopont-modositas nelkul:
+   kivul_vegyszer_mentve: true, edErr: "" ; idopont-modositas 08:00-ra tovabbra is elutasitva ("nem kezdődhet nyitás (9:00) előtt").
+   (Az elso probalkozasnal a tesztadat szolgaltatasneve hibas formatumu volt, ezert a meres akkor false-t adott; javitott tesztadattal ujrafuttatva.)
+10) Reszleges visszatoltesi hiba (a vegyszer-mentes szimulaltan elbukik): adatCsere -> false,
+    foglalasok tarolo valtozatlan: true, vegyszer tarolo valtozatlan: true, vegyszer memoria valtozatlan: true, hangos alert: igen.
+11) null elem a tarolt listaban: loadBookings nem szall el, eredmeny: ["Ervenyes"].

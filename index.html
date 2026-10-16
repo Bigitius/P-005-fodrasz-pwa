@@ -360,6 +360,9 @@
   .modal-acts .cancel{background:transparent;color:var(--muted)}
   .modal-acts .cancel:hover{color:var(--txt);border-color:var(--muted)}
   .modal-err{color:var(--bad);font-size:12px;margin-top:8px;min-height:14px}
+  .chem-act{display:flex;gap:8px;margin-top:10px}
+  .chem-act button{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:14px;cursor:pointer}
+  .chem-act .chem-del{border-color:var(--bad)}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 26px}
 
   /* TABLET-MODE: kis kepernyos, nem http(s)-kent (file:// / content://) futo Huawei tablet -- nem erinti az iPad/web valtozatot */
@@ -375,7 +378,7 @@
      foglaltak a fejlecben, ezert a fulek (.tabs) nem fertek ki egy sorba.
      Az offlineDownload gomb mar amugy is rejtve van file:// / content://
      alatt (lasd JS lejjebb) -- igy tablet-mode-ban mindharom gomb rejtve. */
-  .tablet-mode #backupSave, .tablet-mode #backupLoad{display:none}
+  .tablet-mode #backupSave, .tablet-mode #backupLoad, .tablet-mode #driveBadge{display:none}
   .tablet-mode button{min-height:30px}
   .tablet-mode main{padding:0 10px 16px}
   .tablet-mode .panel{padding:10px}
@@ -401,6 +404,7 @@
     <button class="backup-btn" id="backupSave" title="Mentés az iPadre (Files)">💾 Mentés</button>
     <button class="backup-btn alt" id="backupLoad" title="Visszatöltés mentésfájlból">📂 Visszatöltés</button>
     <button class="backup-btn" id="offlineDownload" title="Program letöltése, hogy internet nélkül is működjön">📥 Offline letöltés</button>
+    <button class="backup-btn" id="driveBadge" title="Mentés Google Drive-ra">☁ Drive</button>
     <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
   </header>
 
@@ -763,10 +767,14 @@ function svcSize(name){
 // anyagok megmaradjanak (ua. a minta, mint a bookings-nál -- STORAGE_KEY)
 var CHEM_KEY = 'fodrasz_vegyszerek_v1';
 function loadChemicals(){
-  try{
-    var r=localStorage.getItem(CHEM_KEY);
-    if(r){ var a=JSON.parse(r); if(Array.isArray(a)) return a; }
-  }catch(e){}
+  var r=null;
+  try{ r=localStorage.getItem(CHEM_KEY); }catch(e){}
+  if(r){
+    var a=null;
+    try{ a=JSON.parse(r); }catch(e){}
+    if(Array.isArray(a)) return a;
+    adathibaJelez(CHEM_KEY, r, 'vegyszerlista nem olvasható');
+  }
   // nincs mentett lista -- próba kódok, mind 500g kezdőkészlet
   return [
     { code:"K001", name:"Festék alap K001", start:500 },
@@ -775,7 +783,7 @@ function loadChemicals(){
   ];
 }
 function saveChemicals(){
-  try{ localStorage.setItem(CHEM_KEY, JSON.stringify(CHEMICALS)); }catch(e){}
+  return biztosIras(CHEM_KEY, CHEMICALS, 'vegyszerlista');
 }
 var CHEMICALS = loadChemicals();
 // ---- Új anyag hozzáadása a Leltárban (ua. az egyszerű prompt-os minta, mint a névjegynél) ----
@@ -874,7 +882,7 @@ function applyDupla(bkA, opt, dir, bName, bPhone, chemCode, chemGram){
   for(var k=0;k<all.length;k++){ if(bkId(all[k])===bkId(bkA)){ all[k].duplaPair=pairId; all[k].duplaRole='A'; } }
   var nb={ date:bkA.date, time:fmtTime(bStartMin), dur:Bsvc.dur, service:opt.B,
     serviceObj:Bsvc, name:(bName||bkA.name), phone:(bPhone||bkA.phone||'-'),
-    duplaPair:pairId, duplaRole:'B' };
+    duplaPair:pairId, duplaRole:'B', uid:newUid() };
   if(hasGram(opt.B)){ nb.chemCode=chemCode||defaultChemCode(); nb.chemGram=parseInt(chemGram,10)||gramFromName(opt.B); nb.done=false; }
   all.push(nb);
   saveBookings(all);
@@ -947,12 +955,98 @@ function fmtDateTime(d){function p(n){n=String(n);return n.length<2?'0'+n:n;}ret
 function parseTime(t){var p=String(t).split(':');return parseInt(p[0],10)*60+parseInt(p[1],10);}
 function fmtTime(min){var h=Math.floor(min/60),m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function loadBookings(){try{var r=localStorage.getItem(STORAGE_KEY);if(!r)return[];var a=JSON.parse(r);if(!Array.isArray(a))return[];var changed=false;a.forEach(function(b){if(!b.uid){b.uid='b'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);changed=true;}if(b.service&&String(b.service).indexOf('—')<0&&b.serviceObj&&b.serviceObj.cat&&SZOLGALTATASOK[b.serviceObj.cat]&&SZOLGALTATASOK[b.serviceObj.cat].some(function(x){return x.name===b.service;})){b.service=b.serviceObj.cat+' — '+b.service;changed=true;}});if(changed){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(a));}catch(e){}}return a;}catch(e){return[];}}
+function newUid(){ return 'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+// ---- ADATHIBA-VÉDELEM (2026-10-16) ----
+// Ha a tárolt adat sérült (nem olvasható JSON / nem lista), NEM írjuk felül csendben:
+// a nyers tartalmat félretesszük egy külön kulcsba, és piros sávban szólunk.
+// Amíg a félretétel nem sikerült, minden mentés tiltott (különben elveszne az adat).
+var ADATHIBA = ADATHIBA || {};   // kulcs -> {uzenet, felreteve:bool}; a vegyszerlista korábban töltődik be, ezért ||
+function adathibaJelez(kulcs, nyers, ok){
+  if(!ADATHIBA) ADATHIBA={};
+  if(ADATHIBA[kulcs]) return;
+  var felre=kulcs+'_SERULT_'+fmtDateTime(new Date()).replace(/[: ]/g,'-');
+  var felreteve=false;
+  try{ localStorage.setItem(felre, nyers); felreteve = localStorage.getItem(felre)===nyers; }catch(e){}
+  ADATHIBA[kulcs]={ uzenet:'A tárolt adat sérült ('+ok+'). '+(felreteve?'A sérült tartalom félretéve: '+felre+'.':'A sérült tartalmat NEM sikerült félretenni — a mentés le van tiltva.')+' Tölts vissza mentésből (📂 Visszatöltés vagy ☁ Drive).', felreteve:felreteve };
+  adathibaSav();
+}
+function adathibaVan(){ return !!ADATHIBA && Object.keys(ADATHIBA).length>0; }
+function adathibaTorol(){ ADATHIBA={}; adathibaSav(); }
+function adathibaSav(){
+  var s=document.getElementById('adathibaSav');
+  if(!s){ if(!document.body) return; s=document.createElement('div'); s.id='adathibaSav';
+    s.style.cssText='position:sticky;top:0;z-index:200;background:#7f1d1d;color:#fff;font-weight:700;padding:12px 16px;font-size:15px;border-bottom:2px solid #f87171';
+    document.body.insertBefore(s, document.body.firstChild); }
+  var k=Object.keys(ADATHIBA);
+  s.style.display=k.length?'block':'none';
+  s.textContent=k.map(function(x){return '⚠ '+ADATHIBA[x].uzenet;}).join('  ');
+}
+// írás + visszaolvasás; hiba esetén HANGOS (alert), és false-t ad vissza
+function biztosIras(kulcs, ertek, mit){
+  if(ADATHIBA && ADATHIBA[kulcs] && !ADATHIBA[kulcs].felreteve){
+    alert('MENTÉS LETILTVA: a '+mit+' tárolt változata sérült, és nem sikerült félretenni. Előbb tölts vissza mentésből!');
+    return false;
+  }
+  var szoveg=JSON.stringify(ertek);
+  try{
+    localStorage.setItem(kulcs, szoveg);
+    if(localStorage.getItem(kulcs)!==szoveg) throw new Error('a visszaolvasott adat eltér');
+  }catch(e){
+    alert('MENTÉS SIKERTELEN ('+mit+'): '+(e&&e.message?e.message:e)+'\nA módosítás NEM maradt meg! Készíts mentést (💾 Mentés), és szólj.');
+    return false;
+  }
+  return true;
+}
+// visszatöltés előtti biztonsági másolat (sérült adatnál a nyers tartalommal együtt), visszaolvasással
+function biztonsagiMasolat(most){
+  try{
+    var sz=JSON.stringify({mikor:fmtDateTime(new Date()), adat:{bookings:most, chemicals:CHEMICALS},
+      serultNyers: adathibaVan() ? {foglalasok:localStorage.getItem(STORAGE_KEY), vegyszerek:localStorage.getItem(CHEM_KEY)} : undefined});
+    localStorage.setItem('fodrasz_elotte_visszatoltes', sz);
+    return localStorage.getItem('fodrasz_elotte_visszatoltes')===sz;
+  }catch(e){ return false; }
+}
+// teljes adatcsere (visszatöltés): vagy minden átíródik, vagy semmi -- részleges hibánál
+// visszaállítja a korábbi nyers tartalmat, hogy ne maradjon félig kicserélt állapot
+function adatCsere(ujB, ujC, mentB, mentC){
+  var regiB=null, regiC=null, regiLista=CHEMICALS.slice();
+  try{ regiB=localStorage.getItem(STORAGE_KEY); regiC=localStorage.getItem(CHEM_KEY); }catch(e){}
+  var hibaElotte=ADATHIBA; ADATHIBA={};      // a felhasználó szándékosan felülírja az esetleg sérült adatot
+  var ok=mentB(ujB);
+  if(ok && Array.isArray(ujC)){
+    CHEMICALS.length=0; ujC.forEach(function(c){CHEMICALS.push(c);});
+    ok=mentC();
+  }
+  if(ok){ adathibaTorol(); return true; }
+  try{
+    if(regiB===null) localStorage.removeItem(STORAGE_KEY); else localStorage.setItem(STORAGE_KEY, regiB);
+    if(regiC===null) localStorage.removeItem(CHEM_KEY); else localStorage.setItem(CHEM_KEY, regiC);
+  }catch(e){ alert('A visszatöltés félbeszakadt, és a korábbi állapot visszaállítása sem sikerült! A biztonsági másolat a "fodrasz_elotte_visszatoltes" kulcsban van — szólj.'); }
+  CHEMICALS.length=0; regiLista.forEach(function(c){CHEMICALS.push(c);});
+  ADATHIBA=hibaElotte; adathibaSav();
+  return false;
+}
+function loadBookings(){
+  var r;
+  try{ r=localStorage.getItem(STORAGE_KEY); }catch(e){ return []; }
+  if(!r) return [];
+  var a;
+  try{ a=JSON.parse(r); }catch(e){ adathibaJelez(STORAGE_KEY, r, 'nem olvasható'); return []; }
+  if(!Array.isArray(a)){ adathibaJelez(STORAGE_KEY, r, 'nem foglalás-lista'); return []; }
+  var changed=false;
+  // üres (null) elemek nem hordoznak adatot, de elszállna rajtuk a feldolgozás
+  if(a.some(function(b){return !b||typeof b!=='object';})){ a=a.filter(function(b){return b&&typeof b==='object';}); changed=true; }
+  a.forEach(function(b){
+    if(!b.uid){ b.uid=newUid(); changed=true; }
+    if(b.service&&String(b.service).indexOf('—')<0&&b.serviceObj&&b.serviceObj.cat&&SZOLGALTATASOK[b.serviceObj.cat]&&SZOLGALTATASOK[b.serviceObj.cat].some(function(x){return x.name===b.service;})){b.service=b.serviceObj.cat+' — '+b.service;changed=true;}
+  });
+  if(changed){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(a));}catch(e){} }
+  return a;
+}
 function saveBookings(a){
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(a));}catch(e){}
   // NINCS automatikus fájl-letöltés minden mentéskor (zavaró volt).
   // Fájlba mentés csak a fejléc 💾 gombjával, kézzel.
-  return true;
+  return biztosIras(STORAGE_KEY, a, 'foglalások');
 }
 // automatikus mentés: dátum-idővel ellátott JSON a letöltések/Files mappába
 function autoBackupToFile(arr){
@@ -971,6 +1065,15 @@ function autoBackupToFile(arr){
   setTimeout(function(){URL.revokeObjectURL(a.href);document.body.removeChild(a);},1500);
 }
 
+// nyitvatartás: a foglalásnak 9:00 és 18:00 közé kell esnie (különben a napi rácson nem látszana)
+var NYITAS=9*60, ZARAS=18*60;
+function nyitvaHiba(time, dur){
+  var s=parseTime(time);
+  if(isNaN(s)) return 'Hibás időpont!';
+  if(s<NYITAS) return 'A foglalás nem kezdődhet nyitás (9:00) előtt!';
+  if(s+(dur||0)>ZARAS) return 'A foglalás nem nyúlhat zárás (18:00) utánra! (vége: '+fmtTime(s+(dur||0))+')';
+  return '';
+}
 // 30 perces napi idősávok 9:00 - 18:00
 function daySlots(){var s=[],m=9*60;while(m<18*60){s.push(fmtTime(m));m+=30;}return s;}
 // induló időpontok a foglaláshoz (9:00 - 17:30)
@@ -1115,8 +1218,8 @@ function apptInner(bk, e, isMulti, half){
       '<div class="nm">'+escapeHtml(bk.name)+
       (bk.phone&&bk.phone!=='-'?' <span class="ph2">☎ '+escapeHtml(bk.phone)+'</span>':'')+'</div>'+
       chem+
-      '<div class="acts"><button class="ed" onclick="openEditById(\''+bkId(bk)+'\')">✏️</button>'+
-      '<button class="dl" onclick="deleteById(\''+bkId(bk)+'\')">🗑</button></div>';
+      '<div class="acts"><button class="ed" onclick="openEditById(\''+jsArg(bkId(bk))+'\')">✏️</button>'+
+      '<button class="dl" onclick="deleteById(\''+jsArg(bkId(bk))+'\')">🗑</button></div>';
   }
 function apptBox(bk, leftCss, rightCss){
     if(!bk.serviceObj) bk.serviceObj=findService(bk.service);
@@ -1178,7 +1281,7 @@ function buildApptCards(bks){
     // ➕ Dupla gomb, ha van rá lehetőség és még nincs párja
     var dupBtn='';
     if(!bk.duplaPair && (duplaOptions(bk).length>0 || restIntervals(bk).length>0)){
-      dupBtn='<button class="d" title="Dupla kártya" onclick="openDuplaById(\''+wid+'\')">D</button>';
+      dupBtn='<button class="d" title="Dupla kártya" onclick="openDuplaById(\''+jsArg(wid)+'\')">D</button>';
     }
     var chemLine='';
     var g=gramFromName(bk.service);
@@ -1194,8 +1297,8 @@ function buildApptCards(bks){
       restBand+
       chemLine+
       '<div class="acts">'+dupBtn+
-      '<button class="ed" onclick="openEditById(\''+wid+'\')">✏️</button>'+
-      '<button class="dl" onclick="deleteById(\''+wid+'\')">🗑</button></div>';
+      '<button class="ed" onclick="openEditById(\''+jsArg(wid)+'\')">✏️</button>'+
+      '<button class="dl" onclick="deleteById(\''+jsArg(wid)+'\')">🗑</button></div>';
     var bg=variBg(col);
     appts+='<div class="appt'+(h<48?' short':'')+'" style="top:'+top+'px;height:'+h+'px;background:'+bg+';color:'+variTxt(col)+';border-left:38px solid '+col.cat.a+';padding-left:14px">'+inner+'</div>';
   });
@@ -1214,7 +1317,11 @@ function renderFooldal(){
   for(var i=0;i<slots.length;i++){
     gridRows+='<div class="trow"><div class="tlabel">'+slots[i]+'</div><div class="tcell"></div></div>';
   }
-  wrap.innerHTML='<div class="timeline">'+gridRows+buildApptCards(bks)+'</div>';
+  // régebben (ellenőrzés nélkül) nyitvatartáson kívülre tett foglalás: ne tűnjön el szó nélkül
+  var kivul=bks.filter(function(b){ return b.time && nyitvaHiba(b.time, b.dur); });
+  var figy=kivul.length ? '<div class="warnBox">⚠ Nyitvatartáson kívüli foglalás (a rácson nem látszik teljesen) — javítsd: '+
+    kivul.map(function(b){ return '<button class="ed-btn" style="margin:4px 6px 0 0" onclick="openEditById(\''+jsArg(bkId(b))+'\')">'+escapeHtml(b.time+' '+b.name+' · '+b.service)+'</button>'; }).join('')+'</div>' : '';
+  wrap.innerHTML=figy+'<div class="timeline">'+gridRows+buildApptCards(bks)+'</div>';
 }
 document.getElementById('foPrev').onclick=()=>{foMainDate.setDate(foMainDate.getDate()-1);renderFooldal();};
 document.getElementById('foNext').onclick=()=>{foMainDate.setDate(foMainDate.getDate()+1);renderFooldal();};
@@ -1393,6 +1500,8 @@ function nameStartsWith(name,letter){
     var longs=['CS','DZ','DZS','GY','LY','NY','SZ','TY','ZS'];
     return longs.indexOf(two)===-1;
   }
+  // "Dz" csoportba nem tartoznak a "Dzs"-vel kezdődő nevek (azoknak saját betűjük van)
+  if(L==='DZ' && n.indexOf('DZS')===0) return false;
   return n.indexOf(L)===0;
 }
 function renderStep4(body){
@@ -1478,6 +1587,8 @@ function confirmBooking(){
   var name=(document.getElementById('bfName').value||'').trim();
   var phone=(document.getElementById('bfPhone').value||'').trim();
   if(!name||!phone){alert('Add meg a neved és a telefonszámod!');return;}
+  var nyH=nyitvaHiba(selTime, selService.dur);
+  if(nyH){ alert(nyH+'\nVálassz korábbi kezdést vagy rövidebb szolgáltatást.'); setStep(2); return; }
   var conflict=findConflict(selDate,selTime,selService.dur,selService);
   var chemCode='', chemGram=0;
   if(hasGram(selService.name)){
@@ -1497,7 +1608,7 @@ function confirmBooking(){
   }
   var b=loadBookings();
   var nb={date:selDate,time:selTime,dur:selService.dur,service:svcFullId(selService),
-    serviceObj:selService, name:name,phone:phone,created:new Date().toISOString()};
+    serviceObj:selService, name:name,phone:phone,created:new Date().toISOString(),uid:newUid()};
   if(hasGram(selService.name)){ nb.chemCode=chemCode; nb.chemGram=chemGram; nb.done=false; }
   b.push(nb);
   saveBookings(b);
@@ -1519,7 +1630,11 @@ function deleteById(id){
   if(b) deleteBookingDirect(b);
 }
 // visszaadja a foglalás egyedi azonosítóját
-function bkId(b){ return b.date+'|'+b.time+'|'+b.service+'|'+b.name; }
+// 2026-10-16: az egyedi uid az azonosító (a régi név+idő összefűzés aposztrófos névnél
+// eltörte a gombokat, és két azonos adatú foglalást egyszerre törölt)
+function bkId(b){ return b.uid || (b.date+'|'+b.time+'|'+b.service+'|'+b.name); }
+// szöveg biztonságos beírása egy onclick="f('...')" attribútumba
+function jsArg(s){ return escapeHtml(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
 
 // módosítás: modal megnyitása a foglalás adataival
 function openEdit(b){
@@ -1573,9 +1688,11 @@ function saveEdit(){
   var serviceObj=findService(sname);
   if(!serviceObj){ document.getElementById('edErr').textContent='Ismeretlen szolgáltatás!'; return; }
   // Ha az időzítés NEM változott (dátum/idő/szolgáltatás ugyanaz), nincs új ütközés → átugorjuk az ellenőrzést.
-  // Így a vegyszer kód / mennyiség / "elkészült" átírása mindig menthető.
+  // Így a vegyszer kód / mennyiség / "elkészült" átírása mindig menthető (régi, nyitvatartáson kívüli foglalásnál is).
   var timingChanged = (date!==editTarget.date) || (time!==editTarget.time) || (sname!==editTarget.service);
   if(timingChanged){
+    var nyH=nyitvaHiba(time, serviceObj.dur);
+    if(nyH){ document.getElementById('edErr').textContent=nyH; return; }
     // ütközés ellenőrzése: a SAJÁT foglalást kihagyjuk
     var st=parseTime(time);
     var newSegs=segmentsOf(serviceObj).filter(function(s){return s.type==='m';});
@@ -1702,7 +1819,7 @@ function confirmSimaRest(Bfull, startMin){
   if(conf){ document.getElementById('dupErr').textContent='Ütközés: '+conf.name+' · '+fullServiceName(conf.service); return; }
   var all=loadBookings();
   all.push({date:b.date, time:fmtTime(startMin), dur:Bsvc.dur, service:svcFullId(Bsvc), serviceObj:Bsvc,
-            name:(bName||b.name), phone:(bPhone||b.phone||'-'), created:new Date().toISOString()});
+            name:(bName||b.name), phone:(bPhone||b.phone||'-'), created:new Date().toISOString(), uid:newUid()});
   saveBookings(all);
   closeDupla();
   toast('Sima kártya a pihenőre: '+svcFullId(Bsvc)+' · '+fmtTime(startMin));
@@ -1721,8 +1838,8 @@ function renderDuplaOpts(b){
       var col=serviceColor(o.B);
       // 'e' és/vagy 'u' irány gombok
       var dirs='';
-      if(o.e){ var eS=duplaBStart(b,o,'e'); dirs+='<button class="dup-dir" onclick="confirmDupla(\''+escapeHtml(o.B)+'\','+o.e+','+o.u+',\'e\')">⟵ Előtte ('+fmtTime(eS)+'-'+fmtTime(eS+Bsvc.dur)+')</button>'; }
-      if(o.u){ var uS=duplaBStart(b,o,'u'); dirs+='<button class="dup-dir" onclick="confirmDupla(\''+escapeHtml(o.B)+'\','+o.e+','+o.u+',\'u\')">Utána ('+fmtTime(uS)+'-'+fmtTime(uS+Bsvc.dur)+') ⟶</button>'; }
+      if(o.e){ var eS=duplaBStart(b,o,'e'); dirs+='<button class="dup-dir" onclick="confirmDupla(\''+jsArg(o.B)+'\','+o.e+','+o.u+',\'e\')">⟵ Előtte ('+fmtTime(eS)+'-'+fmtTime(eS+Bsvc.dur)+')</button>'; }
+      if(o.u){ var uS=duplaBStart(b,o,'u'); dirs+='<button class="dup-dir" onclick="confirmDupla(\''+jsArg(o.B)+'\','+o.e+','+o.u+',\'u\')">Utána ('+fmtTime(uS)+'-'+fmtTime(uS+Bsvc.dur)+') ⟶</button>'; }
       html+='<div class="dup-opt" style="--cstripe:'+col.cat.a+';background:'+variBg(col)+';color:'+variTxt(col)+'">'+
         '<div class="dup-oname">'+escapeHtml(o.B)+' ('+Bsvc.dur+'p)</div>'+
         '<div class="dup-dirs">'+dirs+'</div></div>';
@@ -1749,7 +1866,7 @@ function renderDuplaOpts(b){
       var col=serviceColor(full);
       simaRows+='<div class="dup-opt" style="--cstripe:'+col.cat.a+';background:'+variBg(col)+';color:'+variTxt(col)+'">'+
         '<div class="dup-oname">'+escapeHtml(s0.name)+' ('+s0.dur+'p) — belefér a '+len+'p pihenőbe</div>'+
-        '<div class="dup-dirs"><button class="dup-dir" onclick="confirmSimaRest(\''+escapeHtml(full)+'\','+r.s+')">Pihenőre ('+fmtTime(r.s)+'-'+fmtTime(r.s+s0.dur)+')</button></div></div>';
+        '<div class="dup-dirs"><button class="dup-dir" onclick="confirmSimaRest(\''+jsArg(full)+'\','+r.s+')">Pihenőre ('+fmtTime(r.s)+'-'+fmtTime(r.s+s0.dur)+')</button></div></div>';
     });
   });
   if(simaRows) html+='<div class="dup-group"><div class="dup-gtitle">Sima kártya a pihenőre</div>'+simaRows+'</div>';
@@ -1820,7 +1937,7 @@ document.getElementById('addNameBtn').onclick=function(){
   // ha már van ilyen név, csak frissítjük a telefonszámot
   var found=all.find(function(b){return b.name===nm && (!b.date);});
   if(found){ found.phone=ph; }
-  else { all.push({name:nm, phone:ph, date:'', time:'', dur:0, service:'', serviceObj:null, contact:true}); }
+  else { all.push({name:nm, phone:ph, date:'', time:'', dur:0, service:'', serviceObj:null, contact:true, uid:newUid()}); }
   saveBookings(all);
   regName=nm;
   renderNevjegyzek();
@@ -1889,8 +2006,8 @@ function renderNevjegyzek(){
   var last=bksN.filter(function(x){return !x.contact;}).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).slice(0,4);
   var ph=bksN.map(function(x){return x.phone;}).filter(Boolean)[0]||'-';
   document.getElementById('contactActs').innerHTML=
-    '<button class="ed-btn" style="margin-top:0;padding:5px 9px;font-size:11px;white-space:nowrap" onclick="editContact(\''+escapeHtml(regName).replace(/'/g,"\\'")+'\')">Módosít</button>'+
-    '<button class="del-btn" style="margin-top:0;padding:5px 9px;font-size:11px;white-space:nowrap" onclick="deleteContact(\''+escapeHtml(regName).replace(/'/g,"\\'")+'\')">Töröl</button>';
+    '<button class="ed-btn" style="margin-top:0;padding:5px 9px;font-size:11px;white-space:nowrap" onclick="editContact(\''+jsArg(regName)+'\')">Módosít</button>'+
+    '<button class="del-btn" style="margin-top:0;padding:5px 9px;font-size:11px;white-space:nowrap" onclick="deleteContact(\''+jsArg(regName)+'\')">Töröl</button>';
   var head='<div class="lbl">'+escapeHtml(regName)+' <span class="t2">☎ '+escapeHtml(ph)+'</span></div>';
   if(last.length===0){ detail.innerHTML=head+'<div class="hint">Névjegy — még nincs foglalása. Foglaláskor válaszd ki a nevét a listából.</div>'; return; }
   detail.innerHTML=head+'<div class="lbl" style="margin-top:8px">Utolsó 4 foglalása</div>'+
@@ -1912,19 +2029,72 @@ function renderLeltar(){
   if(!grid) return;
   grid.innerHTML=CHEMICALS.map(function(c){
     var rem=chemRemaining(c.code);
-    var pct=Math.max(0,Math.min(100, rem/c.start*100));
+    var pct=c.start>0?Math.max(0,Math.min(100, rem/c.start*100)):0;
     return '<div class="chem-card">'+
       '<div class="chem-code">'+escapeHtml(c.code)+'</div>'+
       '<div class="chem-name">'+escapeHtml(c.name)+'</div>'+
       '<div class="chem-rem">'+rem+' <span class="u">g</span></div>'+
       '<div class="chem-bar"><div class="chem-fill" style="width:'+pct+'%"></div></div>'+
       '<div class="chem-sub">Kezdő: '+c.start+' g · Maradék: '+rem+' g</div>'+
+      '<div class="chem-act">'+
+        '<button type="button" class="chem-edit" data-code="'+escapeHtml(c.code)+'">✏️ Szerkeszt</button>'+
+        '<button type="button" class="chem-del" data-code="'+escapeHtml(c.code)+'">🗑 Töröl</button>'+
+      '</div>'+
     '</div>';
   }).join('');
 }
+// ---- Leltári tétel szerkesztése / törlése (prompt-os minta, mint az addChemical) ----
+function chemUsageCount(code){
+  return loadBookings().filter(function(b){return b.chemCode===code;}).length;
+}
+function editChemical(code){
+  var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return;
+  var newCode=prompt('Anyag kódja:',c.code);
+  if(newCode===null) return;
+  newCode=(newCode||'').trim();
+  if(!newCode){ toast('A kód nem lehet üres.'); return; }
+  if(newCode!==c.code && CHEMICALS.some(function(x){return x.code===newCode;})){ toast('Már van ilyen kódú anyag.'); return; }
+  var name=prompt('Anyag neve:',c.name);
+  if(name===null) return;
+  name=(name||'').trim()||newCode;
+  var startStr=prompt('Kezdő mennyiség (gramm):',String(c.start));
+  if(startStr===null) return;
+  var start=parseInt(startStr,10);
+  if(isNaN(start)||start<0){ toast('Hibás mennyiség, nem mentettem.'); return; }
+  if(newCode!==c.code){
+    var all=loadBookings(), n=0;
+    all.forEach(function(b){ if(b.chemCode===c.code){ b.chemCode=newCode; n++; } });
+    if(n) saveBookings(all);
+  }
+  c.code=newCode; c.name=name; c.start=start;
+  saveChemicals();
+  renderLeltar();
+  toast('Anyag módosítva: '+name);
+}
+function deleteChemical(code){
+  var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return;
+  var n=chemUsageCount(code);
+  var msg='Biztosan törlöd: '+c.code+' · '+c.name+'?';
+  if(n) msg+=' ('+n+' foglalás hivatkozik erre az anyagra. A foglalások megmaradnak, de az anyag fogyása nem lesz többé levonva sehonnan.)';
+  if(!confirm(msg)) return;
+  CHEMICALS.splice(CHEMICALS.indexOf(c),1);
+  saveChemicals();
+  renderLeltar();
+  toast('Anyag törölve: '+c.name);
+}
+document.addEventListener('click',function(e){
+  var t=e.target.closest&&e.target.closest('.chem-edit,.chem-del'); if(!t) return;
+  var code=t.getAttribute('data-code');
+  if(t.classList.contains('chem-edit')) editChemical(code); else deleteChemical(code);
+});
 
+// MINTAADAT csak a legelső indításkor (üres tároló) kerül be -- 2026-10-16 javítás:
+// korábban minden indításkor visszakerültek a törölt minták, és sérült adatnál a minta
+// írta felül a sérült (de még menthető) tartalmat.
+var FRISS_TELEPITES = (function(){ try{ return localStorage.getItem(STORAGE_KEY)===null; }catch(e){ return false; } })();
 // IDEIGLENES 15p teszt a kártya ellenőrzéséhez (törölhető a Névjegyzék fülön)
 (function seedDemo(){
+  if(!FRISS_TELEPITES || adathibaVan()) return;
   var d=fmtDate(new Date());
   var all=loadBookings();
   if(all.length===0){
@@ -1936,6 +2106,7 @@ function renderLeltar(){
 
 // 5 névjegy (időpont nélkül) — egyszeri seed, nem duplázódik
 (function seedContacts(){
+  if(!FRISS_TELEPITES || adathibaVan()) return;
   var all=loadBookings();
   var seed=[
     {name:'Tóth Evelin', phone:'+36 20 311 2244'},
@@ -1956,7 +2127,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="19";
+var APP_VER="20";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -1983,25 +2154,35 @@ document.getElementById('backupFile').addEventListener('change',function(e){
   var f=e.target.files&&e.target.files[0]; if(!f) return;
   var rd=new FileReader();
   rd.onload=function(){
+    var data, arr;
     try{
-      var data=JSON.parse(rd.result);
-      var arr=Array.isArray(data)?data:(data&&data.bookings?data.bookings:null);
-      if(!Array.isArray(arr)) throw 0;
-      saveBookings(arr);
-      if(data&&Array.isArray(data.chemicals)){
-        CHEMICALS.length=0;
-        data.chemicals.forEach(function(c){CHEMICALS.push(c);});
-        saveChemicals();
-        renderLeltar();
-      }
-      renderFooldal(); renderNevjegyzek(); refreshStep2();
-      toast('Visszatöltve: '+arr.length+' foglalás');
-    }catch(err){ toast('Hibás mentésfájl!'); }
+      data=JSON.parse(rd.result);
+      arr=Array.isArray(data)?data:(data&&data.bookings?data.bookings:null);
+      if(!Array.isArray(arr) || arr.some(function(x){return !x||typeof x!=='object';})) throw 0;
+      if(data&&data.chemicals!=null&&!Array.isArray(data.chemicals)) throw 0;
+    }catch(err){ alert('Hibás mentésfájl, nem töltöttem vissza semmit.'); return; }
+    // 2026-10-16: megerősítés + biztonsági másolat (korábban kérdés nélkül felülírt mindent)
+    var most=loadBookings();
+    var kerdes='Visszatöltés fájlból: '+f.name+
+      (data&&data.savedAt?'\nMentve: '+data.savedAt:'')+
+      '\nA fájlban: '+arr.length+' foglalás'+(data&&Array.isArray(data.chemicals)?', '+data.chemicals.length+' anyag':'')+
+      '\n\nJelenleg a tableten: '+most.length+' foglalás, '+CHEMICALS.length+' anyag.'+
+      '\nA mostani adatról biztonsági másolat készül. Visszatöltöd?';
+    if(!confirm(kerdes)) return;
+    if(!biztonsagiMasolat(most)){ alert('A biztonsági másolat nem sikerült (betelt a tároló?), ezért NEM töltöttem vissza.'); return; }
+    if(!adatCsere(arr, data&&Array.isArray(data.chemicals)?data.chemicals:null, saveBookings, saveChemicals)) return;   // a hangos hibát már jelezte
+    renderLeltar(); renderFooldal(); renderNevjegyzek(); refreshStep2();
+    toast('Visszatöltve: '+arr.length+' foglalás');
   };
   rd.readAsText(f);
   e.target.value='';
 });
 </script>
+
+<!-- Google Drive mentés (2026-10-16): lásd drive-sync.js / drive-ui.js -->
+<script src="drive-config.js"></script>
+<script src="drive-sync.js"></script>
+<script src="drive-ui.js"></script>
 
 <script>
 // 2026-09-06, Istvan dontese: helyi fajlkent (file://, pl. Android
