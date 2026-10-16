@@ -57,6 +57,13 @@ MERT: push István jóváhagyásával: origin/main = ac35da0 (helyi = távoli). 
 ALLITOTT: a tabletek a következő megnyitáskor (netkapcsolattal) frissülnek — nem ellenőrzött.
 - Ritka eset: ha a Drive-visszatöltéskor a sérült helyi adat félretétele korábban nem sikerült, a sérült nyers tartalom a Drive-ág biztonsági másolatába nem kerül be.
 
+## Helyi tablet-változat felfedezése + Vissza gomb (2026-10-16, app v22, SW-cache v21)
+MERT:
+- A `tablet\` mappa (gitből kizárva a .git\info\exclude-dal, NEM a GitHubon) egy 2026-10-14-i külön változatot tartalmaz (`tablet\app.html`, futtató, titkosítás-teszt). Eltérései a GitHub 199b18e-hez képest: fent maradó lépéssor Vissza gombbal; PIN-kódos zárképernyő + AES-256 titkosított tárolás helyreállító kóddal, titkosított mentésfájl; K001–K003 próbakódok és a mintaadat törölve (István kérése, 2026-10-14); service worker kikapcsolva. Ez korábban az ALLAPOT.md-ben nem szerepelt.
+- A Drive-on lévő `index.v2.html` a GitHub 199b18e-től csak a logó képében tér el.
+- A fent maradó Vissza gomb átvéve az index.html-be, böngészőben kipróbálva (bizonyitek/vissza_gomb_2026-10-16.txt).
+ALLITOTT: a PIN/titkosítás átvétele NEM történt meg — tulajdonosi döntés kell (ütközik a Drive-mentéssel: a Drive-ra jelenleg titkosítatlanul menne fel az adat).
+
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).

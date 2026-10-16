@@ -204,6 +204,17 @@
   .step-title{font-size:15px;font-weight:650;margin:0 0 12px}
   .back-link{color:var(--cyan);cursor:pointer;font-size:13px;display:inline-block;margin-top:14px}
   .back-link:hover{text-decoration:underline}
+  /* 2026-10-16 (a tablet\app.html 2026-10-14-i megoldásából átvéve): a lépéssor görgetéskor is
+     fent marad, és a Vissza gomb benne van (a lépések aljáról ide kerül, lásd stepBack-figyelő a JS-ben) */
+  #view-foglalas .steps{position:sticky;top:0;z-index:20;align-items:center;margin:-20px -20px 14px;
+    padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);border-radius:0 16px 0 0}
+  .tablet-mode #view-foglalas .steps{margin:-10px -10px 14px;padding:10px}
+  #stepBack{margin-left:12px;flex:none}
+  #stepBack:empty{display:none}
+  #stepBack .back-link{margin:0;display:inline-flex;align-items:center;min-height:44px;padding:0 20px;
+    border-radius:10px;font-size:16px;font-weight:700;color:#fff;text-decoration:none;
+    background:linear-gradient(135deg,#334155,#475569);border:1px solid rgba(255,255,255,.2)}
+  #stepBack .back-link:active{transform:scale(.96)}
 
   /* naptár (mini) */
   .cal-box{max-width:360px}
@@ -458,6 +469,7 @@
         <div class="step" data-step="2"><span class="dot">2</span> Kezdés</div><div class="step-sep"></div>
         <div class="step" data-step="3"><span class="dot">3</span> Szolgáltatás</div><div class="step-sep"></div>
         <div class="step" data-step="4"><span class="dot">4</span> Név & Telefon</div>
+        <div id="stepBack"></div>
       </div>
       <div class="step-body" id="foglalasBody"></div>
     </section>
@@ -1340,6 +1352,20 @@ document.getElementById('cmNext2').onclick=()=>{foMonthView.setMonth(foMonthView
 // ============================================================================
 // FOGLALÁS - 4 lépés
 // ============================================================================
+// Minden lépés-rajzolás után a lépés alján lévő Vissza linket átrakjuk a ragadós lépéssávba
+// (#stepBack), így görgetés nélkül is mindig látszik. Az 1. lépésen nincs Vissza link.
+// (Átvéve a tablet\app.html 2026-10-14-i változatából.)
+(function(){
+  var body=document.getElementById('foglalasBody'), hely=document.getElementById('stepBack');
+  if(!body||!hely||!window.MutationObserver) return;
+  new MutationObserver(function(){
+    var b=body.querySelector('.back-link');
+    // Az id-t levesszük: különben a következő rajzoláskor a getElementById('b3')
+    // a sávban maradt RÉGI gombot találná meg, és az új gomb kezelő nélkül maradna.
+    if(b){ b.removeAttribute('id'); hely.innerHTML=''; hely.appendChild(b); }
+    else if(!body.firstChild || bookingStep===1){ hely.innerHTML=''; }
+  }).observe(body,{childList:true,subtree:true});
+})();
 function setStep(n){ if(n<=2){ selOnRest=false; selRestLen=0; } bookingStep=n;renderFoglalas(); }
 function renderSteps(){
   document.querySelectorAll('.step').forEach(s=>{
@@ -2053,7 +2079,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="21";
+var APP_VER="22";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;

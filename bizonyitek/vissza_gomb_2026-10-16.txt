@@ -1,0 +1,9 @@
+Fent marado Vissza gomb (atveve a csak helyben levo tablet\app.html 2026-10-14-i valtozatabol), app v22, SW-cache v21.
+Bongeszo: localhost:8765, 1280x800 nezet, 2026-10-16.
+- 1. lepes: nincs Vissza gomb (helyes)
+- 2. lepes: "‹ Vissza a naphoz" a lepessavban; a lepes aljan nem maradt masolat
+- lap aljara gorgetve: a lepessav teteje 0 px, a gomb lathato (44 px magas)
+- kattintas -> 1. lepes
+- 3. lepes: "‹ Vissza az időponthoz"; kategoriaban "‹ Vissza a kategóriákhoz"; vissza -> kategoriak (lepes 3); ujra vissza -> lepes 2
+- a savban mindig 1 gomb van (sav_db: 1)
+Kepernyokep: gorgetes utan a "‹ Vissza a naphoz" gomb a jobb felso sarokban, a lepessav fent marad.
