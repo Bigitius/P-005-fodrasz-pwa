@@ -1,0 +1,11 @@
+Service worker frissitesi hiba javitasa, 2026-10-19 (app v23, SW-cache v22).
+Panasz: a tablet ujranyitas utan is v21-et mutatott, holott a GitHubon v22 volt.
+MERT az elo oldalon (curl): Cache-Control: max-age=600 (GitHub Pages, index.html es service-worker.js is); az elo oldal APP_VER="22".
+Ok (kodbol): (1) a telepiteskori cache.addAll a bongeszo HTTP-gyorsitotarabol is vehette a fajlt (10 percen belul a regit);
+(2) az offline peldany (./index.html) csak telepiteskor mentodott, utana soha nem frissult.
+Javitas: telepiteskor {cache:'reload'}; sikeres oldalbetolteskor az offline peldany frissul; register(..., {updateViaCache:'none'}).
+Bongeszos proba (localhost:8765, tiszta SW + cache utan):
+- elso betoltes: SW vezerel: true, cache: fodrasz-foglalo-v22, mentett index: APP_VER 23
+- az index.html-t ideiglenesen APP_VER="99"-re atirva, SW-valtozas NELKUL ujratoltes: cim v99, mentett offline index: APP_VER 99
+  (vagyis az offline peldany az uj oldallal frissult); utana a fajl visszaallitva (APP_VER="23", diff csak a szandekolt valtozasok).
+NEM mert: a tableten.

@@ -2079,7 +2079,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="22";
+var APP_VER="23";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2144,7 +2144,7 @@ document.getElementById('backupFile').addEventListener('change',function(e){
 // sem jelenhet meg miatta. HTTP(S)-rol (pl. GitHub Pages) valtozatlanul mukodik.
 if ((location.protocol === 'http:' || location.protocol === 'https:') && 'serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('service-worker.js').catch(function(err) {
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).catch(function(err) {
       console.warn('Service worker regisztracio sikertelen:', err);
     });
   });
@@ -2194,7 +2194,7 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
     btn.disabled = true;
     btn.textContent = '⏳ Letöltés...';
     idozit(
-      navigator.serviceWorker.register('service-worker.js')
+      navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
         .then(function (reg) {
           return (reg.update ? reg.update().catch(function () {}) : Promise.resolve()).then(function () { return reg; });
         })
