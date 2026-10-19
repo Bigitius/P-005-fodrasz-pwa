@@ -1,5 +1,5 @@
 # ALLAPOT -- P-005-fodrasz-pwa
-Utolso frissites: 2026-10-16
+Utolso frissites: 2026-10-19
 
 Nyilvanos repo: ebbe a fajlba csak olyan kerulhet, ami barkinek lathato lehet. Belso jegyzetek a gitbol kizart BELSO.md-ben vannak.
 
