@@ -68,6 +68,10 @@ ALLITOTT: a PIN/titkosítás átvétele NEM történt meg — tulajdonosi dönt�
 MERT: v22 (62fa773) és v23 (38362eb) pusholva István jóváhagyásával; GitHub Pages build "built 38362eb"; élő oldal: APP_VER="23", SW "fodrasz-foglalo-v22" {cache:'reload'}-dal, updateViaCache. A v23 javítja, hogy a tablet offline példánya nem frissült (bizonyitek/sw_frissites_2026-10-19.txt).
 ALLITOTT: a tableten a v23 megjelenése nem ellenőrzött. A javítás előtti telepítésnél (v21/v22 SW) az első átállás még a régi SW-n át megy: netkapcsolattal megnyitás, bezárás, újranyitás kell.
 
+## Rendszer fül (2026-10-19, app v24, SW-cache v23)
+MERT (bizonyitek/rendszer_ful_2026-10-19.txt): az 5 fül (Főoldal, Foglalás, Névjegyzék, Leltár, Rendszer) a felső sávban, 1280x800-on egy sorban; a Mentés / Visszatöltés / Offline letöltés / Drive gomb a Rendszer fülön, mind működik. Drive-hiba esetén a Rendszer fülön ⚠ jel látszik. Tablet-mode-ban (file://) a Mentés/Visszatöltés most már látszik (a Rendszer fülön van hely), a Drive helyett magyarázó szöveg.
+ALLITOTT: a TAB 10 Lite-on nem próbált.
+
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).

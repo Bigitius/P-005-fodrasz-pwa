@@ -41,8 +41,15 @@
       var napok = Math.floor((Date.now() - new Date(s.dirtySince).getTime()) / 86400000);
       if (napok >= 1) { szoveg += ' — ' + napok + ' napja nincs lementve!'; osztaly = 'bad'; }
     }
-    badge.className = osztaly;
+    badge.className = 'backup-btn ' + osztaly;
     badge.textContent = '☁ ' + szoveg;
+    // 2026-10-19: a gomb a Rendszer fülre került -- a hiba ne maradjon rejtve: a fülön ⚠ jelzi
+    // (csak ha a Drive be van állítva; a "nincs beállítva" állapot nem riaszt)
+    var fulRsz = document.querySelector('.tab[data-tab="rendszer"]');
+    if (fulRsz) {
+      fulRsz.classList.toggle('figy', !!CLIENT_ID && osztaly === 'bad');
+      fulRsz.title = (CLIENT_ID && osztaly === 'bad') ? szoveg : '';
+    }
     if (mask.classList.contains('show')) rajzolPanel();
   }
 

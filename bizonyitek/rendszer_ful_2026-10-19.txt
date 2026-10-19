@@ -1,0 +1,13 @@
+Rendszer ful + fulek a felso savban, 2026-10-19 (app v24, SW-cache v23). Bongeszo: localhost:8765.
+1280x800 (TAB 10 Lite fekvo): fejlec 77 px magas; az 5 ful egy sorban (y=16), mind 44 px magas:
+  Fooldal 106, Foglalas 111, Nevjegyzek 133, Leltar 94, Rendszer 117 px szeles; vizszintes gorgetes: nincs.
+1024 szeles nezetben: nincs kilogas (a fulek szukseg eseten uj sorba tornek).
+Fejlecben maradt regi gomb: nincs ([]).
+Rendszer ful: aktiv; Mentes / Visszatoltes / Offline letoltes 48 px, Drive 44 px, mind a Rendszer fulon, mind lathato.
+  Mentes -> letoltes indult: true; Visszatoltes -> fajlvalaszto nyilt: true; Drive gomb -> Drive-panel nyilt: true; ablak-hivas: nincs.
+  A tobbi 4 ful valtasa hibatlan.
+Drive-hiba jelzese a fulon (proba-kliensazonositoval, belepes nelkul, egy mentes utan):
+  indulaskor figy: false; utana badge "☁ Drive: be kell jelentkezni", Rendszer ful: " ⚠" jel, title = a hibaszoveg.
+  Beallitatlan Drive-nal (ures azonosito) a ful NEM riaszt (figy: false).
+Tablet-mode (szimulalva): Mentes/Visszatoltes lathato, Drive rejtett, a ket magyarazo szoveg lathato, fulek egy sorban, 44 px.
+NEM mert: valodi file:// megnyitas a tableten; a TAB 10 Lite-on.

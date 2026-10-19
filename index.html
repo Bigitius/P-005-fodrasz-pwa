@@ -378,13 +378,28 @@
   /* a szöveg ne fusson a gombok alá: 2 gomb (✏️ 🗑) ~ 90px, 3 gomb (D ✏️ 🗑) ~ 138px */
   .appt .sv,.appt .nm,.appt .seg,.appt .chem-line{padding-right:104px}
   .appt.harom .sv,.appt.harom .nm,.appt.harom .seg,.appt.harom .chem-line{padding-right:150px}
+  /* 2026-10-19: FÜLEK A FELSŐ SÁVBAN (minden módban) + RENDSZER fül */
+  header.top .tabs{padding:0;margin:0 0 0 auto;max-width:none;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  header.top{flex-wrap:wrap}
+  header.top .tab{border-radius:10px;border-bottom:1px solid var(--line);min-height:44px;
+    display:flex;align-items:center;padding:8px 16px;white-space:nowrap}
+  header.top .tab.active{box-shadow:none;border-color:var(--purple);background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff}
+  header.top .tab.figy::after{content:" ⚠";color:var(--bad);font-weight:800}
+  header.top .tab.active.figy::after{color:#fecaca}
+  .panel{border-radius:16px;margin-top:14px}
+  .rsz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .rsz-kartya{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:18px;
+    display:flex;flex-direction:column;gap:10px}
+  .rsz-cim{font-weight:800;font-size:17px}
+  .rsz-leiras{font-size:13px;color:var(--muted)}
+  .rsz-kartya .backup-btn{margin:auto 0 0;align-self:flex-start;min-height:48px;font-size:15px;padding:10px 18px}
   .chem-act{display:flex;gap:8px;margin-top:10px}
   .chem-act button{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:14px;cursor:pointer}
   .chem-act .chem-del{border-color:var(--bad)}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 26px}
 
   /* TABLET-MODE: kis kepernyos, nem http(s)-kent (file:// / content://) futo Huawei tablet -- nem erinti az iPad/web valtozatot */
-  .tablet-mode header.top{padding:8px 12px;gap:10px;flex-wrap:nowrap}
+  .tablet-mode header.top{padding:8px 12px;gap:10px;flex-wrap:wrap}
   .tablet-mode .logo{width:30px;height:30px;border-radius:9px}
   .tablet-mode header.top h1{font-size:16px}
   .tablet-mode header.top .sub{display:none}
@@ -396,7 +411,11 @@
      foglaltak a fejlecben, ezert a fulek (.tabs) nem fertek ki egy sorba.
      Az offlineDownload gomb mar amugy is rejtve van file:// / content://
      alatt (lasd JS lejjebb) -- igy tablet-mode-ban mindharom gomb rejtve. */
-  .tablet-mode #backupSave, .tablet-mode #backupLoad, .tablet-mode #driveBadge{display:none}
+  /* 2026-10-19: a gombok a Rendszer fülre kerültek, ott van hely -- tablet-mode-ban csak a Drive rejtett
+     (file://-ról a Google-belépés nem működik), helyette magyarázó szöveg látszik */
+  .tablet-mode #driveBadge{display:none}
+  .rsz-csak-file{display:none}
+  .tablet-mode .rsz-csak-file{display:block}
   .tablet-mode button{min-height:30px}
   .tablet-mode main{padding:0 10px 16px}
   .tablet-mode .panel{padding:10px}
@@ -417,21 +436,16 @@
     <div class="logo"><img src="data:image/jpeg;base64,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" alt="Márti fodrászata"></div>
     <div>
       <h1>Márti fodrászata <span id="pageVerBadge" style="font-size:.5em;opacity:.55;font-weight:600">v2026-07-17 fix11</span></h1>
-      <div class="sub">Főoldal · Foglalás · Névjegyzék</div>
     </div>
-    <button class="backup-btn" id="backupSave" title="Mentés az iPadre (Files)">💾 Mentés</button>
-    <button class="backup-btn alt" id="backupLoad" title="Visszatöltés mentésfájlból">📂 Visszatöltés</button>
-    <button class="backup-btn" id="offlineDownload" title="Program letöltése, hogy internet nélkül is működjön">📥 Offline letöltés</button>
-    <button class="backup-btn" id="driveBadge" title="Mentés Google Drive-ra">☁ Drive</button>
-    <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
+    <!-- 2026-10-19: az 5 fül a felső sávban; a mentés/visszatöltés/offline/Drive gombok a Rendszer fülön -->
+    <div class="tabs">
+      <div class="tab active" data-tab="fooldal">🗓️ Főoldal</div>
+      <div class="tab" data-tab="foglalas">➕ Foglalás</div>
+      <div class="tab" data-tab="nevjegyzek">👥 Névjegyzék</div>
+      <div class="tab" data-tab="leltar">🧪 Leltár</div>
+      <div class="tab" data-tab="rendszer">⚙️ Rendszer</div>
+    </div>
   </header>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="fooldal">🗓️ Főoldal</div>
-    <div class="tab" data-tab="foglalas">➕ Foglalás</div>
-    <div class="tab" data-tab="nevjegyzek">👥 Névjegyzék</div>
-    <div class="tab" data-tab="leltar">🧪 Leltár</div>
-  </div>
 
   <main>
     <!-- ============ FŐOLDAL ============ -->
@@ -502,6 +516,35 @@
         </div>
         <div class="chem-grid" id="chemGrid"></div>
         <div class="hint" style="margin-top:14px">A kártyákon lévő „(50g)” mennyiséget a fodrász a szolgáltatás végén pontosíthatja. A levonás csak az <b>elkészült</b> szolgáltatásoknál történik meg (a szerkesztésnél „✓ Elkészült” pipa).</div>
+      </div>
+    </section>
+
+    <!-- ============ RENDSZER (2026-10-19): mentés, visszatöltés, offline, Drive ============ -->
+    <section class="panel view" id="view-rendszer">
+      <div class="rsz-grid">
+        <div class="rsz-kartya">
+          <div class="rsz-cim">💾 Mentés fájlba</div>
+          <div class="rsz-leiras">Az összes foglalást és a leltárt egy fájlba menti a tablet Letöltések mappájába.</div>
+          <button class="backup-btn" id="backupSave" title="Mentés fájlba">💾 Mentés</button>
+        </div>
+        <div class="rsz-kartya">
+          <div class="rsz-cim">📂 Visszatöltés fájlból</div>
+          <div class="rsz-leiras">Egy korábbi mentésfájl visszatöltése. Előtte megmutatja, mi van benne, és rákérdez.</div>
+          <button class="backup-btn alt" id="backupLoad" title="Visszatöltés mentésfájlból">📂 Visszatöltés</button>
+          <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
+        </div>
+        <div class="rsz-kartya">
+          <div class="rsz-cim">📥 Offline letöltés</div>
+          <div class="rsz-leiras">Letölti a programot, hogy internet nélkül is induljon.</div>
+          <button class="backup-btn" id="offlineDownload" title="Program letöltése, hogy internet nélkül is működjön">📥 Offline letöltés</button>
+          <div class="rsz-leiras rsz-csak-file">Helyi fájlként megnyitva erre nincs szükség — így mindig internet nélkül fut.</div>
+        </div>
+        <div class="rsz-kartya">
+          <div class="rsz-cim">☁ Google Drive mentés</div>
+          <div class="rsz-leiras">Ha van net, magától menti az adatokat a Drive-ra; innen vissza is tölthető.</div>
+          <button class="backup-btn" id="driveBadge" title="Mentés Google Drive-ra">☁ Drive</button>
+          <div class="rsz-leiras rsz-csak-file">Helyi fájlként megnyitva a Drive-mentés nem működik (csak a webcímről).</div>
+        </div>
       </div>
     </section>
     </main>
@@ -2079,7 +2122,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="23";
+var APP_VER="24";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2240,20 +2283,5 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
 })();
 </script>
 
-<script>
-// Tablet-mode: a fulsor (.tabs) bekerul a fejlecbe, a logo/cim utan es a
-// mentes/visszatoltes gombok ele -- igy egy sorba olvad a fejlec es a
-// fulsor, tobb hely jut az orarendnek. Csak tablet-mode-ban fut, az
-// iPades/web valtozat DOM-jat nem erinti.
-(function () {
-  if (!document.documentElement.classList.contains('tablet-mode')) return;
-  var header = document.querySelector('header.top');
-  var tabs = document.querySelector('.tabs');
-  var elsoGomb = document.getElementById('backupSave');
-  if (header && tabs && elsoGomb) {
-    header.insertBefore(tabs, elsoGomb);
-  }
-})();
-</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'fodrasz-foglalo-v22';
+﻿const CACHE_NAME = 'fodrasz-foglalo-v23';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './service-worker.js', './drive-config.js', './drive-sync.js', './drive-ui.js', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
