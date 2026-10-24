@@ -83,6 +83,17 @@ MERT (bizonyitek/telepites_2026-10-24.txt):
 - Független ellenőr: RENDBEN; 2 apró megjegyzése (gomb-felirat ajánlat nélkül, teszt-fejléc) javítva.
 ALLITOTT: valódi telepítés a TAB 10 Lite-on nem próbált. Hogy a tablet most helyi fájlból vagy a webcímről fut-e, nem ismert (a v25 a Rendszer fülön kiírja).
 
+## Telepítés gomb v26 (2026-10-24, app v26, SW-cache v25, még NEM commitolva)
+Kutatás (források: web.dev install-criteria, Google Play tanúsított eszközlista, blink-dev Web Install API):
+- A tablet: PRITOM TAB 10 Lite (M10). A Pritom M10 több tucat változata a Google Play tanúsított listáján szerepel (köztük _US); a pontos „TAP_10_Lite” build név szerint nincs benne. A Chrome 155 frissessége is Play-t valószínűsít.
+- Önmagát jóváhagyás nélkül telepítő gomb a Chrome biztonsági szabályai miatt nem lehetséges; a Chrome csak kb. 30 mp látott idő + 1 érintés után ad ajánlatot. A Web Install API Androidon nem érhető el.
+MERT (bizonyitek/telepites_v26_2026-10-24.txt, bizonyitek/telepithetoseg_2026-10-24.txt):
+- Az élő oldal a Chrome 155 szerint telepíthető (0 hiba, headless).
+- A gomb visszaszámol („⏳ Előkészítés… N mp”), ajánlat érkezésekor magától „📲 Telepítés most”; 60 mp után menüs útmutató; „már telepítve” felismerés (manifest related_applications + getInstalledRelatedApps).
+- teszt/telepites_teszt.mjs 40/40; Drive 17/17; headless Chrome 155-ben az ajánlat megjött, a gomb átváltott.
+- Független ellenőr 1 valódi hibát talált (elutasítás után „Várok”-on ragadt), javítva.
+ALLITOTT: Android Chrome-on a 30 mp-es út és a „már telepítve” felismerés nem mért.
+
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).

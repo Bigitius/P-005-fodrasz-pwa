@@ -2129,7 +2129,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="25";
+var APP_VER="26";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2269,13 +2269,18 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
 <script>
 // === 📲 Telepítés (2026-10-24): a Rendszer fülön megmutatja, hogyan fut az app,
 // és ha böngészőben fut, egy gombbal telepíthető (utána böngészősáv nélkül indul). ===
+// 2026-10-24 (v26): a Chrome csak kb. 30 mp látott idő + egy érintés után ad telepítési ajánlatot
+// (web.dev/articles/install-criteria). Addig a gomb visszaszámol, és magától átvált "Telepítés most"-ra.
+// Ha már telepítve van, a manifest related_applications bejegyzésével felismeri (getInstalledRelatedApps).
 (function () {
   var allapot = document.getElementById('telepitAllapot');
   var btn = document.getElementById('telepitBtn');
   if (!allapot || !btn) return;
   var WEBCIM = 'https://bigitius.github.io/P-005-fodrasz-pwa/';
-  var KEZI = 'Chrome jobb felső ⋮ menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.';
-  var telepitveMost = false;
+  var KEZI = 'Chrome jobb felső ⋮ menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” → Telepítés.';
+  var VARAS = 30, FELADAS = 60;   // mp: a Chrome feltétele, illetve meddig várunk az ajánlatra
+  var telepitveMost = false, marTelepitve = false, megerintve = false, latottMp = 0;
+  var webrol = location.protocol === 'http:' || location.protocol === 'https:';
 
   function appkentFut() {
     return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches ||
@@ -2283,8 +2288,14 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
       navigator.standalone === true;
   }
 
+  function gomb(felirat, tiltva) {
+    btn.textContent = felirat;
+    btn.disabled = !!tiltva;
+    btn.style.display = '';
+  }
+
   function frissit() {
-    if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+    if (!webrol) {
       allapot.textContent = 'Most helyi fájlként fut, ezért a böngésző címsora látszik, és így nem telepíthető. ' +
         'Nyisd meg Chrome-ban ezt a címet: ' + WEBCIM + ' — ott ezen a fülön lesz Telepítés gomb.';
       btn.style.display = 'none';
@@ -2294,22 +2305,30 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
     } else if (telepitveMost) {
       allapot.textContent = '✅ Telepítve. Zárd be ezt a böngészőt, és a kezdőképernyőn lévő ikonról indítsd az appot.';
       btn.style.display = 'none';
+    } else if (marTelepitve) {
+      allapot.textContent = 'ℹ️ Ezen a tableten már telepítve van. Zárd be a böngészőt, és a kezdőképernyő „Márti fodrászata” ikonjáról indítsd.';
+      btn.style.display = 'none';
     } else if (window.telepitoEsemeny) {
-      allapot.textContent = 'Most a böngészőben fut. Érintsd meg a gombot, majd: Telepítés. Utána a kezdőképernyő ikonjáról indítsd.';
-      btn.textContent = '📲 Telepítés';
-      btn.style.display = '';
+      allapot.textContent = 'Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.';
+      gomb('📲 Telepítés most', false);
+    } else if (latottMp < FELADAS) {
+      var hatra = Math.max(0, VARAS - latottMp);
+      allapot.textContent = 'A Chrome kb. 30 másodperc használat és egy érintés után engedi a telepítést.' +
+        (megerintve ? ' Várj, a gomb magától átvált.' : ' Érints meg egyszer bármit az appban.');
+      // nem tiltjuk le: a gombra koppintás is "érintés" a Chrome-nak
+      gomb(hatra > 0 ? '⏳ Előkészítés… ' + hatra + ' mp' : '⏳ Várok a Chrome-ra…', false);
     } else {
-      allapot.textContent = 'Most a böngészőben fut. Ha már telepítve van, a kezdőképernyő ikonjáról indítsd. ' +
-        'Ha még nincs: ' + KEZI;
-      btn.textContent = '📲 Hogyan telepítsem?';   // nincs Chrome-ajánlat: a gomb csak útmutatót ad
-      btn.style.display = '';
+      allapot.textContent = 'A Chrome most nem kínálta fel a gombos telepítést. A menüből ugyanígy telepíthető: ' + KEZI;
+      gomb('📲 Hogyan telepítsem?', false);   // nincs Chrome-ajánlat: a gomb csak útmutatót ad
     }
   }
 
   btn.addEventListener('click', function () {
     var e = window.telepitoEsemeny;
-    if (!e) { alert('A telepítés innen most nem indítható.\n\n' + KEZI + '\n\nHa ott sincs ilyen, az app valószínűleg már telepítve van: keresd az ikonját a kezdőképernyőn.'); return; }
+    if (!e && !telepitveMost && !marTelepitve && latottMp < FELADAS) { megerintve = true; frissit(); return; }   // még várunk a Chrome-ra
+    if (!e) { alert('A Chrome most nem kínálta fel a gombos telepítést.\n\n' + KEZI + '\n\nHa a menüben „Megnyitás az alkalmazásban” áll, már telepítve van: a kezdőképernyő ikonjáról indítsd.'); return; }
     window.telepitoEsemeny = null;   // egy ajánlat csak egyszer használható
+    latottMp = FELADAS;              // elutasítás/hiba után ne várjon újra (az óra már leállt): menüs útmutató jön
     e.prompt();
     e.userChoice.then(function (v) {
       if (v && v.outcome === 'accepted') telepitveMost = true;
@@ -2325,6 +2344,23 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
   if (window.matchMedia) {
     var mq = matchMedia('(display-mode: standalone)');
     if (mq.addEventListener) mq.addEventListener('change', frissit);
+  }
+  if (webrol && !appkentFut()) {
+    // a Chrome is csak a látott időt számolja: háttérben nem számolunk
+    var ora = setInterval(function () {
+      if (document.hidden) return;
+      latottMp++;
+      if (latottMp >= FELADAS || window.telepitoEsemeny || telepitveMost || marTelepitve) clearInterval(ora);
+      frissit();
+    }, 1000);
+    document.addEventListener('pointerdown', function () {
+      if (!megerintve) { megerintve = true; frissit(); }
+    }, { passive: true });
+    if (navigator.getInstalledRelatedApps) {
+      navigator.getInstalledRelatedApps().then(function (lista) {
+        if (lista && lista.length) { marTelepitve = true; frissit(); }
+      }).catch(function (err) { console.warn('getInstalledRelatedApps hiba:', err); });
+    }
   }
   frissit();
 })();

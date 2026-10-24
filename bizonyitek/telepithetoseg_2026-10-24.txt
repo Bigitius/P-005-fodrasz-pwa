@@ -1,0 +1,7 @@
+﻿Telepithetoseg merese headless Chrome-mal (Page.getInstallabilityErrors), 2026-10-24
+Chrome: 155.0.8059.85 (asztali gep, nem a tablet)
+
+URL: https://bigitius.github.io/P-005-fodrasz-pwa/
+Manifest URL: https://bigitius.github.io/P-005-fodrasz-pwa/manifest.json | manifest-hibák: []
+Service worker: https://bigitius.github.io/P-005-fodrasz-pwa/service-worker.js
+Telepíthetőségi hibák: []

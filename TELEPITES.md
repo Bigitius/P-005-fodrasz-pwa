@@ -8,8 +8,10 @@ Telepítés után az app saját ikonról, a böngésző címsora nélkül indul
 1. A tableten nyisd meg a **Chrome**-ot, és írd be:
    `https://bigitius.github.io/P-005-fodrasz-pwa/`
 2. Az appban érintsd meg felül a **⚙️ Rendszer** fület.
-3. A **📲 Telepítés a tabletre** kártyán érintsd meg a **📲 Telepítés** gombot,
-   majd a felugró kérdésnél: **Telepítés**.
+3. A **📲 Telepítés a tabletre** kártyán a gomb kb. 30 másodpercig visszaszámol
+   („⏳ Előkészítés…”) – ez a Chrome feltétele. Közben érints meg egyszer bármit.
+   Amikor a gomb felirata **📲 Telepítés most** lesz, érintsd meg, majd a Chrome
+   kérdésénél: **Telepítés**.
 4. Zárd be a Chrome-ot. Ezentúl a kezdőképernyőn lévő **Márti fodrászata**
    ikonról indítsd az appot.
 

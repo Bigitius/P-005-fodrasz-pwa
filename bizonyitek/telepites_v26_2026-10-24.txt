@@ -1,0 +1,29 @@
+﻿Telepites gomb v26 -- 2026-10-24
+
+Parancs: node teszt/telepites_teszt.mjs
+37/37 zöld
+
+Parancs: node teszt/drive_teszt.mjs
+MIND ZOLD: 17 teszt
+
+Parancs: node teszt/chrome_gomb_proba.mjs http://localhost:8765/index.html  (valodi Chrome 155.0.8059.85, headless, asztali)
+URL: http://localhost:8765/index.html | engedély-kerülő kapcsoló: false
+t=3s   {"ver":"26","gomb":"📲 Telepítés most","tiltott":false,"lathato":"block","ajanlat":true,"szoveg":"Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.","relatedApi":true}
+t=11s  {"ver":"26","gomb":"📲 Telepítés most","tiltott":false,"lathato":"block","ajanlat":true,"szoveg":"Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.","relatedApi":true}
+Telepíthetőségi hibák: []
+Konzol-ellenőrzés: getInstalledRelatedApps eredmény: []
+
+Belso bongeszo (ajanlat nelkul): gomb '⏳ Elokeszites… 26 mp' 4 mp utan, konzol hibamentes.
+NEM mert: Android Chrome a tableten. A 30 mp-es visszaszamlalast ez a proba nem bizonyitja: asztali Chrome-on, localhoston az ajanlat azonnal jott (ALLITOTT magyarazat: ott a Chrome nem varja ki a 30 mp-et).
+
+--- Javitas az ellenor utan: elutasitas utan nem ragad 'Varok a Chrome-ra'-n ---
+Parancs: node teszt/telepites_teszt.mjs
+40/40 zöld
+Parancs: node teszt/drive_teszt.mjs
+MIND ZOLD: 17 teszt
+Parancs: node teszt/chrome_gomb_proba.mjs http://localhost:8765/index.html
+URL: http://localhost:8765/index.html | engedély-kerülő kapcsoló: false
+t=3s   {"ver":"26","gomb":"📲 Telepítés most","tiltott":false,"lathato":"block","ajanlat":true,"szoveg":"Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.","relatedApi":true}
+t=11s  {"ver":"26","gomb":"📲 Telepítés most","tiltott":false,"lathato":"block","ajanlat":true,"szoveg":"Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.","relatedApi":true}
+Telepíthetőségi hibák: []
+Konzol-ellenőrzés: getInstalledRelatedApps eredmény: []
