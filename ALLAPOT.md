@@ -83,7 +83,8 @@ MERT (bizonyitek/telepites_2026-10-24.txt):
 - Független ellenőr: RENDBEN; 2 apró megjegyzése (gomb-felirat ajánlat nélkül, teszt-fejléc) javítva.
 ALLITOTT: valódi telepítés a TAB 10 Lite-on nem próbált. Hogy a tablet most helyi fájlból vagy a webcímről fut-e, nem ismert (a v25 a Rendszer fülön kiírja).
 
-## Telepítés gomb v26 (2026-10-24, app v26, SW-cache v25, még NEM commitolva)
+## Telepítés gomb v26 (2026-10-24, app v26, SW-cache v25, élesítve)
+MERT: push István jóváhagyásával: origin/main = 06831a2; Pages "built 06831a2"; az élő oldalon headless Chrome 155: APP_VER 26, ajánlat jött, gomb „📲 Telepítés most”, 0 telepíthetőségi hiba; SW v25; manifest related_applications él.
 Kutatás (források: web.dev install-criteria, Google Play tanúsított eszközlista, blink-dev Web Install API):
 - A tablet: PRITOM TAB 10 Lite (M10). A Pritom M10 több tucat változata a Google Play tanúsított listáján szerepel (köztük _US); a pontos „TAP_10_Lite” build név szerint nincs benne. A Chrome 155 frissessége is Play-t valószínűsít.
 - Önmagát jóváhagyás nélkül telepítő gomb a Chrome biztonsági szabályai miatt nem lehetséges; a Chrome csak kb. 30 mp látott idő + 1 érintés után ad ajánlatot. A Web Install API Androidon nem érhető el.
