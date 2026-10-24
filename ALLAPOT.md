@@ -72,7 +72,8 @@ ALLITOTT: a tableten a v23 megjelenése nem ellenőrzött. A javítás előtti t
 MERT (bizonyitek/rendszer_ful_2026-10-19.txt): az 5 fül (Főoldal, Foglalás, Névjegyzék, Leltár, Rendszer) a felső sávban, 1280x800-on egy sorban; a Mentés / Visszatöltés / Offline letöltés / Drive gomb a Rendszer fülön, mind működik. Drive-hiba esetén a Rendszer fülön ⚠ jel látszik. Tablet-mode-ban (file://) a Mentés/Visszatöltés most már látszik (a Rendszer fülön van hely), a Drive helyett magyarázó szöveg.
 ALLITOTT: a TAB 10 Lite-on nem próbált.
 
-## Telepítés gomb (2026-10-24, app v25, SW-cache v24, még NEM commitolva)
+## Telepítés gomb (2026-10-24, app v25, SW-cache v24, élesítve)
+MERT: push István jóváhagyásával: origin/main = cd434f0; GitHub Pages "built cd434f0"; élő oldalon APP_VER="25", SW "fodrasz-foglalo-v24", icon-maskable-512.png HTTP 200, manifest id "./".
 Cél-eszköz adatai (a tulajdonos megadta): TAB 10 Lite, modell M10, Android 14, Chrome 155.
 MERT (bizonyitek/telepites_2026-10-24.txt):
 - Rendszer fül első kártyája: „📲 Telepítés a tabletre”. Kiírja, hogyan fut az app (helyi fájl / telepített app / böngésző); böngészőben egy gombbal indítja a Chrome telepítését, ha nincs ajánlat, kézi útmutatót ad („Hogyan telepítsem?”). Hiba hangos.
