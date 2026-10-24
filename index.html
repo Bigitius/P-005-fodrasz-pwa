@@ -1028,7 +1028,8 @@ function fmtDate(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0
 function fmtDateTime(d){function p(n){n=String(n);return n.length<2?'0'+n:n;}return fmtDate(d)+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
 function parseTime(t){var p=String(t).split(':');return parseInt(p[0],10)*60+parseInt(p[1],10);}
 function fmtTime(min){var h=Math.floor(min/60),m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
-function escapeHtml(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+// 2026-10-24 (XSS-átnézés): az aposztróf is kódolva, hogy '...'-os attribútumban is biztonságos legyen
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function newUid(){ return 'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 // ---- ADATHIBA-VÉDELEM (2026-10-16) ----
 // Ha a tárolt adat sérült (nem olvasható JSON / nem lista), NEM írjuk felül csendben:
@@ -1293,9 +1294,9 @@ function apptInner(bk, e, isMulti, half){
     if(hasGram(bk.service)){
       var code=bk.chemCode||defaultChemCode();
       var g=(bk.chemGram||gramFromName(bk.service));
-      chem='<div class="chem-line">🧪 '+escapeHtml(code)+' · '+g+'g'+(bk.done?' ✓':'')+'</div>';
+      chem='<div class="chem-line">🧪 '+escapeHtml(code)+' · '+escapeHtml(g)+'g'+(bk.done?' ✓':'')+'</div>';
     }
-    return '<div class="sv">'+escapeHtml(fullServiceName(bk.service))+' <span class="t">'+bk.time+'-'+fmtTime(e)+'</span></div>'+
+    return '<div class="sv">'+escapeHtml(fullServiceName(bk.service))+' <span class="t">'+escapeHtml(bk.time)+'-'+fmtTime(e)+'</span></div>'+
       '<div class="nm">'+escapeHtml(bk.name)+
       (bk.phone&&bk.phone!=='-'?' <span class="ph2">☎ '+escapeHtml(bk.phone)+'</span>':'')+'</div>'+
       chem+
@@ -1370,9 +1371,9 @@ function buildApptCards(bks){
     if(showChem){
       var cg=(bk.chemGram||g);
       var ccode=bk.chemCode||defaultChemCode();
-      chemLine='<div class="chem-line">🧪 '+escapeHtml(ccode)+' · '+cg+'g'+(bk.done?' ✓':'')+'</div>';
+      chemLine='<div class="chem-line">🧪 '+escapeHtml(ccode)+' · '+escapeHtml(cg)+'g'+(bk.done?' ✓':'')+'</div>';
     }
-    var inner='<div class="sv">'+escapeHtml(fullServiceName(bk.service))+' <span class="t">'+bk.time+'-'+fmtTime(e)+'</span></div>'+
+    var inner='<div class="sv">'+escapeHtml(fullServiceName(bk.service))+' <span class="t">'+escapeHtml(bk.time)+'-'+fmtTime(e)+'</span></div>'+
       '<div class="nm">'+escapeHtml(bk.name)+
       (bk.phone&&bk.phone!=='-'?' <span class="ph2">☎ '+escapeHtml(bk.phone)+'</span>':'')+'</div>'+
       restBand+
@@ -1590,9 +1591,9 @@ function renderStep4(body){
         '<input id="bfName" type="text" placeholder="Teljes név">'+
         '<input id="bfPhone" type="tel" placeholder="Telefonszám">'+
         (hasGram(s.name)?'<label style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Vegyszer kód</label>'+
-          '<select id="bfChem">'+(CHEMICALS.map(function(c){var sel=(regChemCode===c.code)?' selected':'';return '<option value="'+c.code+'"'+sel+'>'+c.code+' · '+c.name+'</option>';}).join(''))+'</select>'+
+          '<select id="bfChem">'+(CHEMICALS.map(function(c){var sel=(regChemCode===c.code)?' selected':'';return '<option value="'+escapeHtml(c.code)+'"'+sel+'>'+escapeHtml(c.code)+' · '+escapeHtml(c.name)+'</option>';}).join(''))+'</select>'+
           '<label style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Mennyiség (g)</label>'+
-          '<input id="bfGram" type="number" min="0" step="1" value="'+((regChemGram!==''?regChemGram:gramFromName(s.name)))+'">'+
+          '<input id="bfGram" type="number" min="0" step="1" value="'+escapeHtml(regChemGram!==''?regChemGram:gramFromName(s.name))+'">'+
           '<div class="hint">🧪 '+escapeHtml(s.name)+' — a végleges levonás csak az „elkészült\" pipánál történik.</div>':'')+
         '<div class="hint">Vagy válassz a névjegyzékből →</div>'+
         '<button class="confirm-btn" id="bfGo">Foglalás megerősítése</button>'+
@@ -1819,7 +1820,7 @@ function openDuplaById(id){
   dupGramEdited=false;   // ha nem nyúlnak hozzá, a választott B festés alapgrammja megy
   document.getElementById('dupInfo').innerHTML=
     '<b>1. vendég (A):</b> '+escapeHtml(b.name)+' · '+escapeHtml(b.service)+
-    ' · '+b.time+'-'+fmtTime(parseTime(b.time)+b.dur);
+    ' · '+escapeHtml(b.time)+'-'+fmtTime(parseTime(b.time)+b.dur);
   renderDupBook();
   renderDuplaOpts(b);
   document.getElementById('dupMask').classList.add('show');
@@ -1908,6 +1909,9 @@ function renderDuplaOpts(b){
   var rests=restIntervals(b);
   var simaRows='';
   rests.forEach(function(r){
+    // a pihenő a tárolt (akár fájlból visszatöltött) serviceObj-ból számolódik: csak véges szám mehet a gombba
+    if(!isFinite(r.s)||!isFinite(r.e)) return;
+    r={s:Number(r.s), e:Number(r.e)};
     var len=r.e-r.s;
     var taken=loadBookings().some(function(x){
       if(x.date!==b.date) return false;
@@ -2055,9 +2059,9 @@ function renderNevjegyzek(){
   if(last.length===0){ detail.innerHTML=head+'<div class="hint">Névjegy — még nincs foglalása. Foglaláskor válaszd ki a nevét a listából.</div>'; return; }
   detail.innerHTML=head+'<div class="lbl" style="margin-top:8px">Utolsó 4 foglalása</div>'+
     last.map(function(x,idx){
-      return '<div class="reg-bk"><div class="d">'+x.date+' · '+x.time+
+      return '<div class="reg-bk"><div class="d">'+escapeHtml(x.date)+' · '+escapeHtml(x.time)+
               (x.phone&&x.phone!=='-'?' <span class="t2">☎ '+escapeHtml(x.phone)+'</span>':'')+'</div>'+
-        '<div class="s">'+escapeHtml(x.service)+' ('+x.dur+'p)</div></div>';
+        '<div class="s">'+escapeHtml(x.service)+' ('+escapeHtml(x.dur)+'p)</div></div>';
     }).join('');
 }
 
@@ -2076,9 +2080,9 @@ function renderLeltar(){
     return '<div class="chem-card">'+
       '<div class="chem-code">'+escapeHtml(c.code)+'</div>'+
       '<div class="chem-name">'+escapeHtml(c.name)+'</div>'+
-      '<div class="chem-rem">'+rem+' <span class="u">g</span></div>'+
+      '<div class="chem-rem">'+escapeHtml(rem)+' <span class="u">g</span></div>'+
       '<div class="chem-bar"><div class="chem-fill" style="width:'+pct+'%"></div></div>'+
-      '<div class="chem-sub">Kezdő: '+c.start+' g · Maradék: '+rem+' g</div>'+
+      '<div class="chem-sub">Kezdő: '+escapeHtml(c.start)+' g · Maradék: '+escapeHtml(rem)+' g</div>'+
       '<div class="chem-act">'+
         '<button type="button" class="chem-edit" data-code="'+escapeHtml(c.code)+'">✏️ Szerkeszt</button>'+
         '<button type="button" class="chem-del" data-code="'+escapeHtml(c.code)+'">🗑 Töröl</button>'+
@@ -2140,7 +2144,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="27";
+var APP_VER="28";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;

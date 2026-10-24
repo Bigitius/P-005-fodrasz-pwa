@@ -1,0 +1,92 @@
+XSS-átnézés: innerHTML-helyek az index.html-ben és a drive-ui.js-ben (2026-10-24)
+Sorszámok a javítás UTÁNI index.html szerint. Jelölés: VÉDETT = már előtte is rendben; JAVÍTVA = most javítva; FIX = csak a kódba írt szöveg.
+
+index.html
+ 1229 Főoldal havi naptár (#foMonth)          nap-szám, gyártott dátum (fmtDate)                FIX
+ 1406 Főoldal órarend (#foTimeline)           név, telefon, szolgáltatás, vegyszerkód: VÉDETT;
+                                              időpont (bk.time), gramm (chemGram): JAVÍTVA;
+                                              nyitvatartáson kívüli sáv (idő+név+szolg.): VÉDETT; ✏️/🗑/D gomb-azonosító: VÉDETT (jsArg)
+ 1427, 1428 Vissza-link sáv kiürítése         ''                                                 FIX
+ 1450 Foglalás 1. lépés váz                   kódbeli szöveg                                     FIX
+ 1468 Foglalás 1. naptár                      nap-szám, gyártott dátum                           FIX
+ 1496 Foglalás 2. lépés (ugyanaz a kártya-rajzoló, mint 1406)   ld. 1406                         JAVÍTVA
+ 1546 Foglalás 3. lépés                       kategória/szolgáltatás (kódbeli lista), alap vegyszerkód: VÉDETT
+ 1628 Foglalás 4. lépés                       névjegyzék-nevek, telefon: VÉDETT;
+                                              vegyszerkód+név a legördülőben: JAVÍTVA (előtte NYERS);
+                                              gramm-mező értéke (regChemGram): JAVÍTVA
+ 1716 Módosítás ablak: szolgáltatás-lista     '' + createElement/textContent                    FIX/VÉDETT
+ 1733 Módosítás ablak: vegyszer-lista         fix első sor + createElement/textContent           FIX/VÉDETT
+ 1814 Dupla ablak: vegyszer-lista             '' + createElement/textContent                    FIX/VÉDETT
+ 1821 Dupla ablak fejléc (#dupInfo)           név, szolgáltatás: VÉDETT; időpont: JAVÍTVA
+ 1856 Dupla ablak névjegyzék (#dupBook)       név, telefon: VÉDETT
+ 1934 Dupla ablak opciók (#dupOpts)           kódbeli szolgáltatásnevek: VÉDETT; a pihenő kezdete/hossza a TÁROLT
+                                              (fájlból visszatölthető) serviceObj-ból számolódik és onclick-be ment: JAVÍTVA
+                                              (csak véges szám mehet tovább)
+ 2033, 2034 Névjegyzék üres                   kódbeli szöveg                                     FIX
+ 2040 Névjegyzék lista                        név, kezdőbetű: VÉDETT
+ 2051 Névjegyzék, nincs kiválasztva           kódbeli szöveg                                     FIX
+ 2055 Névjegyzék Módosít/Töröl gomb           név onclick-ben: VÉDETT (jsArg)
+ 2059, 2060 Névjegyzék részletek              név, telefon, szolgáltatás: VÉDETT;
+                                              dátum, időpont, hossz (x.date/x.time/x.dur): JAVÍTVA
+ 2077 Leltár (#chemGrid)                      kód, név: VÉDETT; kezdő mennyiség (c.start), maradék: JAVÍTVA
+drive-ui.js
+   31 Drive panel váz                         kódbeli szöveg                                     FIX
+  127 Drive panel kiürítése                   '' (utána createElement/textContent)               FIX
+  154 Drive lista kiürítése                   '' (utána textContent)                             FIX
+Egyéb: escapeHtml mostantól az aposztrófot is kódolja (&#39;) — ' jelű attribútumban is biztonságos; a jsArg erre épül, működése nem változott.
+Nincs insertAdjacentHTML / outerHTML / document.write.
+
+=== MERT: node teszt/xss_teszt.mjs (javított index.html) ===
+OK   Főoldal: nincs befecskendezett HTML/JS (2 innerHTML-írás)
+OK   Főoldal: a rosszindulatú adat szövegként látszik (1,2,3,4,7,14,15)
+OK   Névjegyzék (lista): nincs befecskendezett HTML/JS (3 innerHTML-írás)
+OK   Névjegyzék (lista): a rosszindulatú adat szövegként látszik (1,14)
+OK   Névjegyzék (kiválasztott név): nincs befecskendezett HTML/JS (3 innerHTML-írás)
+OK   Névjegyzék (kiválasztott név): a rosszindulatú adat szövegként látszik (1,9,16,17)
+OK   Leltár: nincs befecskendezett HTML/JS (1 innerHTML-írás)
+OK   Leltár: a rosszindulatú adat szövegként látszik (3,10,11,12)
+OK   Foglalás 1. lépés: nincs befecskendezett HTML/JS (2 innerHTML-írás)
+OK   Foglalás 1. lépés: a rosszindulatú adat szövegként látszik ()
+OK   Foglalás 2. lépés: nincs befecskendezett HTML/JS (1 innerHTML-írás)
+OK   Foglalás 2. lépés: a rosszindulatú adat szövegként látszik (1,2,3,4,7)
+OK   Foglalás 3. lépés (kategóriák): nincs befecskendezett HTML/JS (1 innerHTML-írás)
+OK   Foglalás 3. lépés (kategóriák): a rosszindulatú adat szövegként látszik ()
+OK   Foglalás 3. lépés (Festés): nincs befecskendezett HTML/JS (1 innerHTML-írás)
+OK   Foglalás 3. lépés (Festés): a rosszindulatú adat szövegként látszik (3)
+OK   Foglalás 4. lépés: nincs befecskendezett HTML/JS (1 innerHTML-írás)
+OK   Foglalás 4. lépés: a rosszindulatú adat szövegként látszik (1,3,10,11,13,17)
+OK   Dupla ablak: nincs befecskendezett HTML/JS (5 innerHTML-írás)
+OK   Dupla ablak: a rosszindulatú adat szövegként látszik (1,17)
+OK   Dupla: pihenő-sor nem tartalmaz szegmens-szemetet
+OK   önpróba: nyers <img onerror> kiszűrve
+OK   önpróba: attribútumból kitörés kiszűrve
+OK   önpróba: onclick-ből kitörés kiszűrve
+OK   önpróba: helyes kódolás átmegy
+OK   nem nyílt (hamis) ablak a teszt alatt (alert/confirm/prompt)
+
+26/26 rendben
+kilépési kód: 0
+
+=== MERT: ugyanez a javítás ELŐTTI változaton (git HEAD index.html) — el kell buknia ===
+HIBA Főoldal: nincs befecskendezett HTML/JS (2 innerHTML-írás)  -> #foTimeline tiltott címke: <img> || #foTimeline tiltott attribútum: src || #foTimeline tiltott attribútum: onerror || #foTimeline tiltott címke: <
+HIBA Névjegyzék (kiválasztott név): nincs befecskendezett HTML/JS (3 innerHTML-írás)  -> #regDetail tiltott címke: <img> || #regDetail tiltott attribútum: src || #regDetail tiltott attribútum: onerror
+HIBA Leltár: nincs befecskendezett HTML/JS (1 innerHTML-írás)  -> #chemGrid tiltott címke: <img> || #chemGrid tiltott attribútum: src || #chemGrid tiltott attribútum: onerror
+HIBA Foglalás 2. lépés: nincs befecskendezett HTML/JS (1 innerHTML-írás)  -> #foglalasBody tiltott címke: <img> || #foglalasBody tiltott attribútum: src || #foglalasBody tiltott attribútum: onerror || #foglalasBo
+HIBA Foglalás 4. lépés: nincs befecskendezett HTML/JS (1 innerHTML-írás)  -> #foglalasBody tiltott címke: <img> || #foglalasBody tiltott attribútum: src || #foglalasBody tiltott attribútum: onerror || #foglalasBo
+HIBA Dupla ablak: nincs befecskendezett HTML/JS (5 innerHTML-írás)  -> #dupOpts onclick hiba (missing ) after argument list): confirmSimaRest('Szárítás és Vágás — Rövid haj',600035<img src=x onerror=alert(6)>)
+HIBA Dupla: pihenő-sor nem tartalmaz szegmens-szemetet
+
+19/26 rendben, 7 HIBA
+
+=== MERT: meglévő tesztek ===
+19/19 zöld
+MIND ZOLD: 17 teszt
+6 inline szkript, 0 szintaxishiba
+
+=== MERT: böngészős próba (beépített böngésző, http://127.0.0.1:8765/index.html, tablet/szerver.py) ===
+Payload ablak nélkül: <img src=x onerror=sessionStorage.xss+=N> (alert helyett jelző), ugyanazokban a mezőkben, mint a node-tesztben.
+Főoldal, Névjegyzék (kiválasztott névvel), Leltár, Foglalás 1-4. lépés, Dupla ablak: mindenhol 0 <img> elem a nézetekben,
+sessionStorage.xss 800 ms várakozás után is null; alert/confirm/prompt hívás: 0; konzolhiba: 0.
+A rossz adat szövegként látszik (pl. Leltár kód: "K001<img src=x onerror=...>", Főoldal név: "Zoli\"<img ...> ☎ 1").
+A ✏️ gomb a "u');sessionStorage.xss+=5;//" azonosítójú foglalásnál megnyitja a módosító ablakot a helyes névvel/idővel, jelző null.
+A próba után a böngésző localStorage-a üres (előtte is üres volt).

@@ -107,6 +107,10 @@ MERT (bizonyitek/android_2026-10-24/):
 - Független ellenőr: RENDBEN 1 javítandóval (SW), javítva. Biztonsági átvizsgálás: nincs sürgős kockázat; javítva: fájlnév-szűrés, külső linkek szűkítése, próba külön csomagnév, allowContentAccess ki.
 ALLITOTT / nyitott: valódi TAB 10 Lite-on nem próbált; GitHub-fiók 2FA (a fő kockázat a fiók feltörése); az index.html innerHTML-helyeinek XSS-átnézése; CSP.
 
+## XSS-javítás (2026-10-24, app v28, SW-cache v28, élesítve)
+MERT (bizonyitek/xss_2026-10-24.txt): 29 innerHTML-hely átnézve (26 index.html, 3 drive-ui.js), a felhasználói adatok escape-elve; teszt/xss_teszt.mjs 26/26; böngészőben rosszindulatú névvel/kóddal: 0 befecskendezett elem, 0 felugró ablak, 0 konzolhiba; független ellenőr: RENDBEN. telepites_teszt 19/19, Drive 17/17. Push István jóváhagyásával.
+ALLITOTT: a tableten nem próbált (a webes tartalommal az APK magától frissül).
+
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).
