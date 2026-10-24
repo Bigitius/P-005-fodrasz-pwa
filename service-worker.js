@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'fodrasz-foglalo-v25';
+﻿const CACHE_NAME = 'fodrasz-foglalo-v27';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './service-worker.js', './drive-config.js', './drive-sync.js', './drive-ui.js', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -30,7 +30,10 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request).then((valasz) => {
         // 2026-10-19: a sikeresen letoltott oldallal frissitjuk az offline peldanyt is
         // (korabban csak telepiteskor mentodott el, es utana soha nem frissult).
-        if (valasz && valasz.ok && valasz.type === 'basic') {
+        // 2026-10-24: csak HTML-oldalt mentünk főoldalnak -- pl. az APK letöltése is "navigate" kérés,
+        // az nem írhatja felül az offline index.html-t
+        const tipus = (valasz && valasz.headers.get('content-type')) || '';
+        if (valasz && valasz.ok && valasz.type === 'basic' && tipus.indexOf('text/html') === 0) {
           const masolat = valasz.clone();
           event.waitUntil(caches.open(CACHE_NAME).then((c) => c.put('./index.html', masolat)));
         }

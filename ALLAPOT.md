@@ -95,6 +95,17 @@ MERT (bizonyitek/telepites_v26_2026-10-24.txt, bizonyitek/telepithetoseg_2026-10
 - Független ellenőr 1 valódi hibát talált (elutasítás után „Várok”-on ragadt), javítva.
 ALLITOTT: Android Chrome-on a 30 mp-es út és a „már telepítve” felismerés nem mért.
 
+## Saját Android-alkalmazás (APK) + web v27 (2026-10-24, még NEM commitolva)
+Ok: a Chrome-os telepítés (v25–v26) a tableten István szerint nem működött.
+MERT (bizonyitek/android_2026-10-24/):
+- android/: WebView-keret (Gradle nélkül épül: android/epit.py), a webes appot tölti be böngészősáv nélkül; marti-fodraszata.apk (1.0, kód 1) a repó gyökerében, a Pages-ről tölthető. Aláírókulcs: android/kulcs/ (gitből kizárva) — biztonsági másolat kell a repón kívül.
+- Web v27: Rendszer fül böngészőben „📥 Alkalmazás letöltése”, appban „Androidos alkalmazásként fut”; 💾 Mentés appban a hídon át a Letöltésekbe; Drive az appban kikapcsolva (Google tiltja a belépést WebView-ban); SW: főoldalnak csak HTML-t ment.
+- Emulátor (Android 14, 1280x800, ablak nélkül): 14/14 (adatmegmaradás, offline indulás, saját párbeszédablak, híd-szűrés); kézi: Letöltésekből telepítés engedéllyel → „App installed”, ikon, élő oldal; Mentés → Letöltések; Visszatöltés fájlválasztóval.
+- Tesztek: telepites_teszt 19/19, Drive 17/17, headless Chrome APK-letöltés után az offline főoldal HTML marad.
+- Korlát (mért): az utolsó beírás elveszhet, ha az appot 1 mp-en belül erőszakkal leállítják.
+- Független ellenőr: RENDBEN 1 javítandóval (SW), javítva. Biztonsági átvizsgálás: nincs sürgős kockázat; javítva: fájlnév-szűrés, külső linkek szűkítése, próba külön csomagnév, allowContentAccess ki.
+ALLITOTT / nyitott: valódi TAB 10 Lite-on nem próbált; GitHub-fiók 2FA (a fő kockázat a fiók feltörése); az index.html innerHTML-helyeinek XSS-átnézése; CSP.
+
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
 - 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).

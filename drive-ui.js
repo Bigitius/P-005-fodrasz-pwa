@@ -3,6 +3,8 @@
 (function () {
   'use strict';
   if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  // 2026-10-24: a saját Androidos appban (WebView) a Google-belépés tiltott -- ott nem indul
+  if (/ MartiApp\//.test(navigator.userAgent)) return;
 
   var badge = document.getElementById('driveBadge');
   if (!badge) return;

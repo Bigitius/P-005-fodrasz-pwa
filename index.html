@@ -2,8 +2,8 @@
 <html lang="hu">
 <head>
 <script>document.documentElement.classList.add((location.protocol!=='http:'&&location.protocol!=='https:')?'tablet-mode':'web-mode');
-// 2026-10-24: a Chrome telepítési ajánlatát korán el kell kapni (a Rendszer fül 📲 Telepítés gombja használja)
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.telepitoEsemeny=e;document.dispatchEvent(new Event('telepites-elerheto'));});</script>
+// 2026-10-24 (v27): a saját Androidos app (android/) "MartiApp/<verzió>" jelet tesz a böngésző-azonosítóba
+if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.add('app-mode');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title id="pageTitle">Márti fodrászata</title>
@@ -418,6 +418,9 @@ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();win
   .tablet-mode #driveBadge{display:none}
   .rsz-csak-file{display:none}
   .tablet-mode .rsz-csak-file{display:block}
+  .rsz-csak-app{display:none}
+  .app-mode .rsz-csak-app{display:block}
+  .app-mode #driveBadge{display:none}
   .tablet-mode button{min-height:30px}
   .tablet-mode main{padding:0 10px 16px}
   .tablet-mode .panel{padding:10px}
@@ -551,6 +554,7 @@ window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();win
           <div class="rsz-leiras">Ha van net, magától menti az adatokat a Drive-ra; innen vissza is tölthető.</div>
           <button class="backup-btn" id="driveBadge" title="Mentés Google Drive-ra">☁ Drive</button>
           <div class="rsz-leiras rsz-csak-file">Helyi fájlként megnyitva a Drive-mentés nem működik (csak a webcímről).</div>
+          <div class="rsz-leiras rsz-csak-app">Az Androidos alkalmazásban a Google-belépés nem engedélyezett (Google-szabály), ezért itt a Drive-mentés nem működik. Használd a 💾 Mentés gombot.</div>
         </div>
       </div>
     </section>
@@ -1125,7 +1129,14 @@ function autoBackupToFile(arr){
   function p(n){n=String(n);return n.length<2?'0'+n:n;}
   var fn='Márti-foglalás-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'.json';
   var data={app:'Márti fodrászata', savedAt:fmtDateTime(d), bookings:arr, chemicals:CHEMICALS};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var szoveg=JSON.stringify(data,null,2);
+  // 2026-10-24: a saját Androidos appban (WebView) a letöltő link nem működik -- a híd írja a Letöltések mappába
+  if(window.MartiApp && typeof window.MartiApp.mentes==='function'){
+    var v=String(window.MartiApp.mentes(fn, szoveg));
+    if(v.indexOf('ok:')!==0){ alert('A mentés NEM sikerült (küldd el screenshotnak):\n'+v); return false; }
+    return true;
+  }
+  var blob=new Blob([szoveg],{type:'application/json'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=fn;
@@ -2129,7 +2140,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="26";
+var APP_VER="27";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2148,7 +2159,7 @@ document.getElementById('dupMask').addEventListener('click',function(e){ if(e.ta
 
 // ---- automatikus mentés / visszatöltés (iPad) ----
 document.getElementById('backupSave').onclick=function(){
-  autoBackupToFile(loadBookings());
+  if(autoBackupToFile(loadBookings())===false) return;   // a hibát már hangosan jelezte
   toast('Mentésfájl letöltve (Files → Letöltések)');
 };
 document.getElementById('backupLoad').onclick=function(){ document.getElementById('backupFile').click(); };
@@ -2267,102 +2278,43 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
 </script>
 
 <script>
-// === 📲 Telepítés (2026-10-24): a Rendszer fülön megmutatja, hogyan fut az app,
-// és ha böngészőben fut, egy gombbal telepíthető (utána böngészősáv nélkül indul). ===
-// 2026-10-24 (v26): a Chrome csak kb. 30 mp látott idő + egy érintés után ad telepítési ajánlatot
-// (web.dev/articles/install-criteria). Addig a gomb visszaszámol, és magától átvált "Telepítés most"-ra.
-// Ha már telepítve van, a manifest related_applications bejegyzésével felismeri (getInstalledRelatedApps).
+// === 📲 Telepítés (2026-10-24, v27): a Rendszer fülön megmutatja, hogyan fut az app.
+// Böngészőben a saját Androidos alkalmazás (marti-fodraszata.apk) letöltését kínálja: ez saját ikonról,
+// böngészősáv nélkül indul, és nem függ a Chrome telepítési ajánlatától (a v25-v26 PWA-út a tableten nem működött).
 (function () {
   var allapot = document.getElementById('telepitAllapot');
   var btn = document.getElementById('telepitBtn');
   if (!allapot || !btn) return;
   var WEBCIM = 'https://bigitius.github.io/P-005-fodrasz-pwa/';
-  var KEZI = 'Chrome jobb felső ⋮ menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” → Telepítés.';
-  var VARAS = 30, FELADAS = 60;   // mp: a Chrome feltétele, illetve meddig várunk az ajánlatra
-  var telepitveMost = false, marTelepitve = false, megerintve = false, latottMp = 0;
-  var webrol = location.protocol === 'http:' || location.protocol === 'https:';
+  var APK = 'marti-fodraszata.apk';
 
-  function appkentFut() {
+  function appban() { return / MartiApp\//.test(navigator.userAgent); }
+  function webappkentFut() {
     return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches ||
-      matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches)) ||
-      navigator.standalone === true;
+      matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone === true;
+  }
+  function appVerzio() {
+    try { return window.MartiApp && window.MartiApp.verzio ? ' (alkalmazás v' + window.MartiApp.verzio() + ')' : ''; }
+    catch (e) { return ''; }
   }
 
-  function gomb(felirat, tiltva) {
-    btn.textContent = felirat;
-    btn.disabled = !!tiltva;
+  if (appban()) {
+    allapot.textContent = '✅ Androidos alkalmazásként fut' + appVerzio() + ', böngészősáv nélkül. Nincs teendő.';
+    btn.style.display = 'none';
+  } else if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+    allapot.textContent = 'Most helyi fájlként fut. Az alkalmazás letöltéséhez nyisd meg Chrome-ban ezt a címet: ' +
+      WEBCIM + ' — ott ezen a fülön lesz a letöltő gomb.';
+    btn.style.display = 'none';
+  } else {
+    allapot.textContent = (webappkentFut() ? 'Most webes ikonról fut. ' : 'Most a böngészőben fut. ') +
+      '1) Előbb 💾 Mentés (az alkalmazás adatai külön vannak). ' +
+      '2) Érintsd meg a gombot, majd a letöltés végén a letöltött fájlt → Telepítés ' +
+      '(első alkalommal az Android engedélyt kér: Beállítások → Engedélyezés ebből a forrásból). ' +
+      '3) Az új „Márti fodrászata” ikonról indítsd, és ott 📂 Visszatöltés.';
+    btn.textContent = '📥 Alkalmazás letöltése';
     btn.style.display = '';
+    btn.addEventListener('click', function () { location.href = APK; });
   }
-
-  function frissit() {
-    if (!webrol) {
-      allapot.textContent = 'Most helyi fájlként fut, ezért a böngésző címsora látszik, és így nem telepíthető. ' +
-        'Nyisd meg Chrome-ban ezt a címet: ' + WEBCIM + ' — ott ezen a fülön lesz Telepítés gomb.';
-      btn.style.display = 'none';
-    } else if (appkentFut()) {
-      allapot.textContent = '✅ Telepített appként fut, böngészősáv nélkül. Nincs teendő.';
-      btn.style.display = 'none';
-    } else if (telepitveMost) {
-      allapot.textContent = '✅ Telepítve. Zárd be ezt a böngészőt, és a kezdőképernyőn lévő ikonról indítsd az appot.';
-      btn.style.display = 'none';
-    } else if (marTelepitve) {
-      allapot.textContent = 'ℹ️ Ezen a tableten már telepítve van. Zárd be a böngészőt, és a kezdőképernyő „Márti fodrászata” ikonjáról indítsd.';
-      btn.style.display = 'none';
-    } else if (window.telepitoEsemeny) {
-      allapot.textContent = 'Kész a telepítésre. Érintsd meg a gombot, majd a Chrome kérdésére: Telepítés.';
-      gomb('📲 Telepítés most', false);
-    } else if (latottMp < FELADAS) {
-      var hatra = Math.max(0, VARAS - latottMp);
-      allapot.textContent = 'A Chrome kb. 30 másodperc használat és egy érintés után engedi a telepítést.' +
-        (megerintve ? ' Várj, a gomb magától átvált.' : ' Érints meg egyszer bármit az appban.');
-      // nem tiltjuk le: a gombra koppintás is "érintés" a Chrome-nak
-      gomb(hatra > 0 ? '⏳ Előkészítés… ' + hatra + ' mp' : '⏳ Várok a Chrome-ra…', false);
-    } else {
-      allapot.textContent = 'A Chrome most nem kínálta fel a gombos telepítést. A menüből ugyanígy telepíthető: ' + KEZI;
-      gomb('📲 Hogyan telepítsem?', false);   // nincs Chrome-ajánlat: a gomb csak útmutatót ad
-    }
-  }
-
-  btn.addEventListener('click', function () {
-    var e = window.telepitoEsemeny;
-    if (!e && !telepitveMost && !marTelepitve && latottMp < FELADAS) { megerintve = true; frissit(); return; }   // még várunk a Chrome-ra
-    if (!e) { alert('A Chrome most nem kínálta fel a gombos telepítést.\n\n' + KEZI + '\n\nHa a menüben „Megnyitás az alkalmazásban” áll, már telepítve van: a kezdőképernyő ikonjáról indítsd.'); return; }
-    window.telepitoEsemeny = null;   // egy ajánlat csak egyszer használható
-    latottMp = FELADAS;              // elutasítás/hiba után ne várjon újra (az óra már leállt): menüs útmutató jön
-    e.prompt();
-    e.userChoice.then(function (v) {
-      if (v && v.outcome === 'accepted') telepitveMost = true;
-      frissit();
-    }, function (err) {
-      alert('Telepítési hiba (küldd el screenshotnak):\n' + (err && err.message ? err.message : String(err)));
-      frissit();
-    });
-  });
-
-  document.addEventListener('telepites-elerheto', frissit);
-  window.addEventListener('appinstalled', function () { telepitveMost = true; window.telepitoEsemeny = null; frissit(); });
-  if (window.matchMedia) {
-    var mq = matchMedia('(display-mode: standalone)');
-    if (mq.addEventListener) mq.addEventListener('change', frissit);
-  }
-  if (webrol && !appkentFut()) {
-    // a Chrome is csak a látott időt számolja: háttérben nem számolunk
-    var ora = setInterval(function () {
-      if (document.hidden) return;
-      latottMp++;
-      if (latottMp >= FELADAS || window.telepitoEsemeny || telepitveMost || marTelepitve) clearInterval(ora);
-      frissit();
-    }, 1000);
-    document.addEventListener('pointerdown', function () {
-      if (!megerintve) { megerintve = true; frissit(); }
-    }, { passive: true });
-    if (navigator.getInstalledRelatedApps) {
-      navigator.getInstalledRelatedApps().then(function (lista) {
-        if (lista && lista.length) { marTelepitve = true; frissit(); }
-      }).catch(function (err) { console.warn('getInstalledRelatedApps hiba:', err); });
-    }
-  }
-  frissit();
 })();
 </script>
 

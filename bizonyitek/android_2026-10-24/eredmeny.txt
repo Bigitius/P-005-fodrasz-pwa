@@ -1,0 +1,56 @@
+Androidos keret (APK) -- 2026-10-24
+Emulator: Android 14 (API 34, google_apis x86_64), 1280x800, 160 dpi, ablak nelkul (-no-window)
+
+Parancs: node teszt/telepites_teszt.mjs
+18/18 zöld
+
+Parancs: node teszt/drive_teszt.mjs
+MIND ZOLD: 17 teszt
+
+Parancs: python -X utf8 android/epit.py --proba ; node teszt/android_emulator_proba.mjs
+Betöltött oldal: http://localhost:8765/index.html | verzió: 27
+OK   az app a weboldalt tölti be (v27)
+OK   böngésző-azonosítóban MartiApp jel
+OK   a mentő híd elérhető
+OK   app-mode és "Androidos alkalmazásként fut"
+OK   Drive-gomb rejtve az appban
+OK   újraindítás után megmaradt a tárolt adat
+OK   újraindítás után a foglalások száma ugyanaz
+OK   service worker vezérli az oldalt (offline-hoz kell)
+OK   internet (szerver) nélkül is elindul a v27
+OK   megerősítő ablak fejléce: "Márti fodrászata"
+OK   megerősítő ablak gombjai: OK és Mégse
+OK   Mégse -> confirm() hamis
+
+12/12 zöld
+
+Tarolas-meres (localStorage tartossag kemeny leallitasnal):
+azonnal          leállítás előtt -> ELVESZETT
+1 mp             leállítás előtt -> MEGMARADT
+3 mp             leállítás előtt -> MEGMARADT
+6 mp             leállítás előtt -> MEGMARADT
+háttérbe, 1 mp   leállítás előtt -> MEGMARADT
+
+Eles APK (python -X utf8 android/epit.py):
+Number of signers: 1
+package: name='io.github.bigitius.fodrasz' versionCode='1' versionName='1.0' platformBuildVersionName='14' platformBuildVersionCode='34' compileSdkVersion='34' compileSdkVersionCodename='14'
+KÉSZ: C:\Code\P-005-fodrasz-pwa\marti-fodraszata.apk 102961 bájt, verzió 1.0 kód 1 | kezdőcím: https://bigitius.github.io/P-005-fodrasz-pwa/
+
+Kezi lepesek az emulatoron (kepek ebben a mappaban): Letoltesek -> APK megerintese -> 'ismeretlen forras' engedely -> Install -> 'App installed' (telepito.png); ikon a kezdokepernyon (ikon.png); az eles APK az elo oldalt tolti be bongeszosav nelkul (eles_app.png); Rendszer ful appban (rendszer_appban.png); Mentes -> Letoltesek mappa, Visszatoltes fajlvalasztoval, megerosites, 'Visszatoltve' (korabbi kezi proba: mentes_appban.png, visszatoltes_kerdes.png).
+NEM mert: valodi TAB 10 Lite (BigdroidOS) -- a telepitoablak es az engedely-kepernyo ott eltero lehet.
+
+--- Javitasok az ellenor + biztonsagi atvizsgalas utan (2026-10-24) ---
+SW: foold-mentes csak text/html valaszbol; APK: fajlnev-szures + meretkorlat a hidban, kulso link csak https/tel/mailto, allowContentAccess=false, DownloadListener, restoreState-tartalek; proba-APK kulon csomagnev (io.github.bigitius.fodrasz.proba).
+Parancs: node teszt/telepites_teszt.mjs
+19/19 zöld
+Parancs: node teszt/drive_teszt.mjs
+MIND ZOLD: 17 teszt
+Parancs: node teszt/chrome_apk_sw_proba.mjs http://localhost:8765/
+SW vezérel: true
+Offline főoldal ELŐTTE: text/html | <!DOCTYPE html>
+Offline főoldal UTÁNA : text/html | <!DOCTYPE html>
+OK: az APK-letöltés után is HTML az offline főoldal
+Parancs: node teszt/android_emulator_proba.mjs (proba-APK ujraepitve)
+14/14 zold (fenti futas, a kepek frissitve)
+Kezi: Visszatoltes fajlvalasztoval allowContentAccess=false mellett is mukodik (visszatoltes_kesz.png).
+Eles APK sha256: 90daa7a21266cecd4e4c5eb28eb7b7286ba3c663a9584887f26d89e81175c842; dex-ben localhost: 0; manifest: allowBackup=false, nincs usesCleartextTraffic, nincs debuggable; emulatorra telepitve, elindul.

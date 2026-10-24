@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Márti fodrászata – Androidos keret (2026-10-24). A webes appot (GitHub Pages) futtatja
+     böngészősáv nélkül, saját ikonnal. Lásd android/README.md. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.github.bigitius.fodrasz">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:label="Márti fodrászata"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:theme="@style/Tema">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|smallestScreenSize|uiMode"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

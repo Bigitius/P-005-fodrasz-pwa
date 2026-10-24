@@ -1,164 +1,109 @@
-// A Rendszer fül "📲 Telepítés" kártyájának automata tesztje (2026-10-24, v26).
-// Az index.html-ből kivágja a Telepítés blokkot, és hamis böngésző-környezetben futtatja.
-// Valódi ablakot NEM nyit: elszigetelt vm-környezetben fut, nincs benne valódi böngésző;
-// az alert egy gyűjtő függvény, ami csak feljegyzi az üzenetet; az óra kézzel léptetett.
+// A Rendszer fül "📲 Telepítés" kártyájának és a mentő hídnak automata tesztje (2026-10-24, v27).
+// Az index.html-ből kivágja a Telepítés blokkot és az autoBackupToFile függvényt, és hamis
+// böngésző-környezetben futtatja. Valódi ablakot NEM nyit: elszigetelt vm-környezet, az alert gyűjtő függvény.
 // Futtatás: node teszt/telepites_teszt.mjs
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const kezd = html.indexOf('// === 📲 Telepítés');
-if (kezd < 0) throw new Error('A Telepítés blokk nem található az index.html-ben');
-const veg = html.indexOf('</script>', kezd);
-if (veg < 0) throw new Error('A Telepítés blokk vége nem található');
-const kod = html.slice(kezd, veg);
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+function kivag(jelolo, vegJel) {
+  const k = html.indexOf(jelolo);
+  if (k < 0) throw new Error('Nem található: ' + jelolo);
+  const v = html.indexOf(vegJel, k);
+  if (v < 0) throw new Error('Nem található a vége: ' + jelolo);
+  return html.slice(k, v + (vegJel === '</script>' ? 0 : vegJel.length));
+}
+const telepites = kivag('// === 📲 Telepítés', '</script>');
+const mentes = kivag('function autoBackupToFile(arr){', '\n}\n');
 
 let jo = 0, rossz = 0;
-function ellenoriz(nev, feltetel) {
-  if (feltetel) { jo++; console.log('OK   ' + nev); } else { rossz++; console.log('HIBA ' + nev); }
+function ellenoriz(nev, feltetel, reszlet = '') {
+  if (feltetel) { jo++; console.log('OK   ' + nev); } else { rossz++; console.log('HIBA ' + nev + (reszlet ? '  -> ' + reszlet : '')); }
 }
 
-function kornyezet({ protokoll = 'https:', standalone = false, ajanlat = null, telepitettLista = null } = {}) {
+const UA_CHROME = 'Mozilla/5.0 (Linux; Android 14; M10) AppleWebKit/537.36 Chrome/155.0 Safari/537.36';
+const UA_APP = UA_CHROME + ' MartiApp/1.0';
+
+function kartya({ protokoll = 'https:', ua = UA_CHROME, standalone = false, hid = null } = {}) {
   const elemek = {
     telepitAllapot: { textContent: '' },
-    telepitBtn: { textContent: '', disabled: false, style: { display: 'none' }, kattintas: null,
+    telepitBtn: { textContent: '', style: { display: 'none' }, kattintas: null,
       addEventListener(t, f) { if (t === 'click') this.kattintas = f; } },
   };
-  const docEsem = {}, winEsem = {};
-  const alertek = [];
-  let oraFv = null, oraAll = false;
-  const win = {
-    telepitoEsemeny: ajanlat,
-    matchMedia: (q) => ({ matches: standalone && q === '(display-mode: standalone)', addEventListener() {} }),
-    addEventListener(t, f) { winEsem[t] = f; },
-  };
+  const loc = { protocol: protokoll, href: 'https://bigitius.github.io/P-005-fodrasz-pwa/' };
+  const win = { MartiApp: hid };
   const ctx = {
-    window: win, location: { protocol: protokoll }, console,
-    navigator: telepitettLista ? { getInstalledRelatedApps: () => Promise.resolve(telepitettLista) } : {},
-    matchMedia: win.matchMedia,
-    alert: (m) => alertek.push(m),
-    setInterval: (f) => { oraFv = f; return 1; },
-    clearInterval: () => { oraAll = true; },
-    Math,
-    document: { hidden: false, getElementById: (id) => elemek[id] || null, addEventListener(t, f) { docEsem[t] = f; } },
+    window: win, location: loc, navigator: { userAgent: ua },
+    matchMedia: (q) => ({ matches: standalone && q === '(display-mode: standalone)' }),
+    document: { getElementById: (id) => elemek[id] || null },
+  };
+  win.matchMedia = ctx.matchMedia;
+  vm.createContext(ctx);
+  vm.runInContext(telepites, ctx);
+  return { elemek, loc };
+}
+const sz = (k) => k.elemek.telepitAllapot.textContent;
+const gomb = (k) => k.elemek.telepitBtn;
+
+// 1. saját Androidos appban
+let k = kartya({ ua: UA_APP, hid: { verzio: () => '1.0' } });
+ellenoriz('appban: "Androidos alkalmazásként fut" + verzió', sz(k).includes('Androidos alkalmazásként fut') && sz(k).includes('v1.0'));
+ellenoriz('appban: gomb rejtve', gomb(k).style.display === 'none');
+
+// 2. helyi fájl
+k = kartya({ protokoll: 'file:' });
+ellenoriz('helyi fájl: a webcímre küld', sz(k).includes('helyi fájlként') && sz(k).includes('github.io'));
+ellenoriz('helyi fájl: gomb rejtve', gomb(k).style.display === 'none');
+
+// 3. Chrome-ban: letöltő gomb, lépések, adatátvitel
+k = kartya();
+ellenoriz('böngészőben: "📥 Alkalmazás letöltése" gomb látszik', gomb(k).textContent === '📥 Alkalmazás letöltése' && gomb(k).style.display === '');
+ellenoriz('böngészőben: előbb Mentés, utána Visszatöltés', sz(k).includes('💾 Mentés') && sz(k).includes('📂 Visszatöltés'));
+ellenoriz('böngészőben: engedélykérésre figyelmeztet', sz(k).includes('engedélyt kér'));
+gomb(k).kattintas();
+ellenoriz('gomb: az APK-t tölti le', k.loc.href === 'marti-fodraszata.apk', k.loc.href);
+
+// 4. webes ikonról (korábbi PWA-telepítés) is felkínálja
+k = kartya({ standalone: true });
+ellenoriz('webes ikonról: szintén letöltő gomb', sz(k).startsWith('Most webes ikonról fut') && gomb(k).style.display === '');
+
+// 5. mentő híd az autoBackupToFile-ban
+function mentesKorny(hid) {
+  const alertek = [], letoltesek = [];
+  const ctx = {
+    window: { MartiApp: hid }, alert: (m) => alertek.push(m), CHEMICALS: [{ code: 'K1' }],
+    fmtDateTime: () => '2026-10-24 10:00', JSON, Date, String, Blob: class { constructor(p) { this.p = p; } },
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} }, setTimeout: () => {},
+    document: { createElement: () => ({ style: {}, click() { letoltesek.push(this.download); } }), body: { appendChild() {}, removeChild() {} } },
   };
   vm.createContext(ctx);
-  vm.runInContext(kod, ctx);
-  const leptet = (mp) => { for (let i = 0; i < mp && !oraAll; i++) oraFv(); };
-  return { elemek, docEsem, winEsem, alertek, win, ctx, leptet, oraAll: () => oraAll, vanOra: () => !!oraFv };
+  vm.runInContext(mentes + '\nthis.autoBackupToFile = autoBackupToFile;', ctx);
+  return { ctx, alertek, letoltesek };
 }
+let hivasok = [];
+let m = mentesKorny({ mentes: (n, t) => { hivasok.push([n, t]); return 'ok:' + n; } });
+let eredm = m.ctx.autoBackupToFile([{ name: 'Teszt' }]);
+ellenoriz('híd: a mentés a hídon megy, nem letöltő linken', hivasok.length === 1 && m.letoltesek.length === 0);
+ellenoriz('híd: helyes fájlnév és tartalom', /^Márti-foglalás-.*\.json$/.test(hivasok[0][0]) && JSON.parse(hivasok[0][1]).bookings[0].name === 'Teszt');
+ellenoriz('híd: siker -> true', eredm === true);
+m = mentesKorny({ mentes: () => 'hiba:betelt' });
+eredm = m.ctx.autoBackupToFile([]);
+ellenoriz('híd hiba: hangos üzenet és false', eredm === false && m.alertek.length === 1 && m.alertek[0].includes('betelt'));
+m = mentesKorny(null);
+m.ctx.autoBackupToFile([]);
+ellenoriz('híd nélkül (böngésző): letöltő link', m.letoltesek.length === 1);
 
-const allapot = (k) => k.elemek.telepitAllapot.textContent;
-const gomb = (k) => k.elemek.telepitBtn;
-const var_ = () => new Promise((r) => setTimeout(r, 10));
+// 6. a Mentés gomb nem ír sikert, ha a híd hibát jelzett
+ellenoriz('Mentés gomb: hiba esetén nincs "letöltve" üzenet', html.includes("if(autoBackupToFile(loadBookings())===false) return;"));
 
-// 1. helyi fájl
-let k = kornyezet({ protokoll: 'file:' });
-ellenoriz('helyi fájl: magyarázat a webcímmel', allapot(k).includes('helyi fájlként') && allapot(k).includes('github.io'));
-ellenoriz('helyi fájl: gomb rejtve', gomb(k).style.display === 'none');
-ellenoriz('helyi fájl: nincs visszaszámláló', !k.vanOra());
-
-// 2. telepített appként fut
-k = kornyezet({ standalone: true });
-ellenoriz('telepített app: nincs teendő', allapot(k).includes('Telepített appként fut'));
-ellenoriz('telepített app: gomb rejtve', gomb(k).style.display === 'none');
-ellenoriz('telepített app: nincs visszaszámláló', !k.vanOra());
-
-// 3. böngésző, induláskor: visszaszámlálás, a gomb NEM tiltott (a koppintás érintésnek számít)
-k = kornyezet();
-ellenoriz('indulás: "Előkészítés… 30 mp"', gomb(k).textContent === '⏳ Előkészítés… 30 mp');
-ellenoriz('indulás: gomb látszik és nem tiltott', gomb(k).style.display === '' && gomb(k).disabled === false);
-ellenoriz('indulás: érintést kér', allapot(k).includes('Érints meg'));
-k.leptet(10);
-ellenoriz('10 mp után: "20 mp"', gomb(k).textContent === '⏳ Előkészítés… 20 mp');
-k.elemek.telepitBtn.kattintas();
-ellenoriz('várakozás közbeni koppintás: nincs felugró ablak', k.alertek.length === 0);
-ellenoriz('koppintás után: már nem kér érintést', allapot(k).includes('magától átvált'));
-k.leptet(20);
-ellenoriz('30 mp után: "Várok a Chrome-ra…"', gomb(k).textContent === '⏳ Várok a Chrome-ra…');
-
-// 4. az ajánlat megérkezik -> magától "Telepítés most", az óra leáll; elfogadás
-let hivas = 0;
-k.win.telepitoEsemeny = { prompt() { hivas++; }, userChoice: Promise.resolve({ outcome: 'accepted' }) };
-k.docEsem['telepites-elerheto']();
-ellenoriz('ajánlat: magától "📲 Telepítés most"', gomb(k).textContent === '📲 Telepítés most' && !gomb(k).disabled);
-k.leptet(1);
-ellenoriz('ajánlat után az óra leáll', k.oraAll());
-k.elemek.telepitBtn.kattintas();
-await var_();
-ellenoriz('elfogadás: prompt egyszer hívva', hivas === 1);
-ellenoriz('elfogadás: "Telepítve" + gomb rejtve', allapot(k).includes('Telepítve') && gomb(k).style.display === 'none');
-ellenoriz('elfogadás: ajánlat elhasználva', k.win.telepitoEsemeny === null);
-
-// 5. 60 mp alatt nincs ajánlat -> menüs útmutató, a gomb útmutatót ad
-k = kornyezet();
-k.docEsem['pointerdown']();
-k.leptet(60);
-ellenoriz('60 mp ajánlat nélkül: "Hogyan telepítsem?"', gomb(k).textContent === '📲 Hogyan telepítsem?');
-ellenoriz('60 mp ajánlat nélkül: menüs út a szövegben', allapot(k).includes('⋮'));
-ellenoriz('60 mp után az óra leáll', k.oraAll());
-k.elemek.telepitBtn.kattintas();
-ellenoriz('60 mp után a gomb útmutatót mutat', k.alertek.length === 1 && k.alertek[0].includes('⋮'));
-
-// 6. már telepítve (getInstalledRelatedApps)
-k = kornyezet({ telepitettLista: [{ platform: 'webapp' }] });
-await var_();
-ellenoriz('már telepítve: felismeri', allapot(k).includes('már telepítve van'));
-ellenoriz('már telepítve: gomb rejtve', gomb(k).style.display === 'none');
-k = kornyezet({ telepitettLista: [] });
-await var_();
-ellenoriz('nincs telepítve (üres lista): visszaszámlálás marad', gomb(k).textContent.startsWith('⏳'));
-
-// 7. elutasítás -> visszaáll (60 mp előtt várakozás), nincs felugró ablak
-k = kornyezet({ ajanlat: { prompt() {}, userChoice: Promise.resolve({ outcome: 'dismissed' }) } });
-ellenoriz('kész ajánlattal indul: "Telepítés most"', gomb(k).textContent === '📲 Telepítés most');
-k.elemek.telepitBtn.kattintas();
-await var_();
-ellenoriz('elutasítás: nincs felugró ablak', k.alertek.length === 0);
-ellenoriz('elutasítás: gomb újra látszik', gomb(k).style.display === '');
-ellenoriz('elutasítás: nem ragad "Várok"-on, menüs útmutató', gomb(k).textContent === '📲 Hogyan telepítsem?' && allapot(k).includes('⋮'));
-
-// 7b. visszaszámlálás közben jött ajánlat, majd elutasítás (az óra már leállt)
-k = kornyezet();
-k.leptet(31);
-k.win.telepitoEsemeny = { prompt() {}, userChoice: Promise.resolve({ outcome: 'dismissed' }) };
-k.docEsem['telepites-elerheto']();
-k.leptet(1);
-k.elemek.telepitBtn.kattintas();
-await var_();
-ellenoriz('31 mp + ajánlat + elutasítás: menüs útmutató, nem ragad', gomb(k).textContent === '📲 Hogyan telepítsem?');
-// a Chrome később új ajánlatot küldhet: akkor újra "Telepítés most"
-k.win.telepitoEsemeny = { prompt() {}, userChoice: Promise.resolve({ outcome: 'accepted' }) };
-k.docEsem['telepites-elerheto']();
-ellenoriz('új ajánlat elutasítás után: újra "Telepítés most"', gomb(k).textContent === '📲 Telepítés most');
-
-// 8. hiba a telepítésben -> hangos
-k = kornyezet({ ajanlat: { prompt() {}, userChoice: Promise.reject(new Error('proba-hiba')) } });
-k.elemek.telepitBtn.kattintas();
-await var_();
-ellenoriz('telepítési hiba: hangos üzenet', k.alertek.length === 1 && k.alertek[0].includes('proba-hiba'));
-
-// 9. appinstalled esemény (pl. a Chrome menüből telepítve)
-k = kornyezet();
-k.winEsem['appinstalled']();
-ellenoriz('appinstalled: "Telepítve" + gomb rejtve', allapot(k).includes('Telepítve') && gomb(k).style.display === 'none');
-
-// 10. háttérben nem számol
-k = kornyezet();
-k.ctx.document.hidden = true;
-k.leptet(10);
-ellenoriz('háttérben: nem számol', gomb(k).textContent === '⏳ Előkészítés… 30 mp');
-
-// 11. manifest és service worker
-const m = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
-ellenoriz('manifest: display standalone (óra/akku marad)', m.display === 'standalone');
-ellenoriz('manifest: van maskable ikon', m.icons.some((i) => i.purpose === 'maskable'));
-ellenoriz('manifest: van 192 és 512-es ikon', ['192x192', '512x512'].every((s) => m.icons.some((i) => i.sizes === s)));
-ellenoriz('manifest: related_applications webapp a saját manifestre',
-  (m.related_applications || []).some((a) => a.platform === 'webapp' && a.url === 'https://bigitius.github.io/P-005-fodrasz-pwa/manifest.json'));
-ellenoriz('manifest: prefer_related_applications nem true', m.prefer_related_applications !== true);
+// 7. manifest, service worker, Drive
+const man = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
+ellenoriz('manifest: display standalone', man.display === 'standalone');
 const sw = readFileSync(new URL('../service-worker.js', import.meta.url), 'utf8');
-ellenoriz('service worker: az új ikon az offline listában', sw.includes('./icon-maskable-512.png'));
+ellenoriz('service worker: az APK NINCS az offline listában', !sw.includes('.apk'));
+ellenoriz('service worker: főoldalnak csak HTML-t ment (APK-letöltés nem írja felül)', sw.includes("tipus.indexOf('text/html') === 0"));
+const driveUi = readFileSync(new URL('../drive-ui.js', import.meta.url), 'utf8');
+ellenoriz('Drive: az appban nem indul (Google-belépés tiltott WebView-ban)', driveUi.includes("/ MartiApp\\//.test(navigator.userAgent)) return;"));
 
 console.log(`\n${jo}/${jo + rossz} zöld`);
 if (rossz) process.exit(1);

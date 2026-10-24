@@ -1,34 +1,34 @@
 ﻿# Telepítési útmutató – Márti fodrászata alkalmazás
 
-## Telepítés a TAB 10 Lite tabletre (Android 14, Chrome) – EZ AZ ALAP
+## Telepítés a TAB 10 Lite tabletre (Android 14) – EZ AZ ALAP: saját Android-alkalmazás
 
-Telepítés után az app saját ikonról, a böngésző címsora nélkül indul
-(az Android felső sávja – óra, akkumulátor – látszik).
+Az app egy saját Android-alkalmazás (`marti-fodraszata.apk`): saját ikonról,
+böngészősáv nélkül indul (az Android felső sávja – óra, akkumulátor – látszik).
+Nem függ a Chrome telepítési ajánlatától.
 
 1. A tableten nyisd meg a **Chrome**-ot, és írd be:
    `https://bigitius.github.io/P-005-fodrasz-pwa/`
-2. Az appban érintsd meg felül a **⚙️ Rendszer** fület.
-3. A **📲 Telepítés a tabletre** kártyán a gomb kb. 30 másodpercig visszaszámol
-   („⏳ Előkészítés…”) – ez a Chrome feltétele. Közben érints meg egyszer bármit.
-   Amikor a gomb felirata **📲 Telepítés most** lesz, érintsd meg, majd a Chrome
-   kérdésénél: **Telepítés**.
-4. Zárd be a Chrome-ot. Ezentúl a kezdőképernyőn lévő **Márti fodrászata**
-   ikonról indítsd az appot.
+2. **⚙️ Rendszer** fül → **💾 Mentés** (az alkalmazás adatai külön vannak a Chrome-étól,
+   így viszed át őket).
+3. Ugyanott: **📥 Alkalmazás letöltése**. A letöltés végén érintsd meg a letöltött
+   fájlt (vagy: Fájlkezelő → Letöltések → `marti-fodraszata.apk`).
+4. Első alkalommal az Android engedélyt kér („ismeretlen alkalmazások”):
+   **Beállítások** → **Engedélyezés ebből a forrásból** bekapcsolása → vissza.
+5. **Telepítés** → **Megnyitás**. Az ikon („Márti fodrászata”) a kezdőképernyőre kerül.
+6. Az alkalmazásban: **⚙️ Rendszer** → **📂 Visszatöltés** → a 2. lépésben mentett fájl.
 
-Ellenőrzés: indítás után a Rendszer fülön ez áll: „✅ Telepített appként fut”.
+Ellenőrzés: a Rendszer fülön ez áll: „✅ Androidos alkalmazásként fut”.
 
-Ha a gomb nem indítja a telepítést (pl. a Chrome épp nem ajánlja fel):
-Chrome jobb felső **⋮** menü → **„Alkalmazás telepítése”** vagy
-**„Hozzáadás a kezdőképernyőhöz”**. Ha ott sincs ilyen, az app valószínűleg már
-telepítve van – keresd az ikonját a kezdőképernyőn.
+Frissítés: a tartalom (foglalás, leltár stb.) magától frissül, ha internettel indítod.
+Az alkalmazást csak akkor kell újra letölteni, ha ezt külön kérjük.
 
-Ha korábban helyi fájlként (Fájlkezelő → `index.html`) használtad: előtte
-a Rendszer fülön **💾 Mentés**, a telepített appban pedig **📂 Visszatöltés**
-ugyanabból a fájlból. A helyi fájl és a telepített app adatai NEM közösek.
+Korlátok (mért, emulátoron): internet nélkül is indul (az első indításhoz net kell);
+a Google Drive-mentés az alkalmazásban nem működik (a Google tiltja a belépést ilyen
+beépített nézetben) – helyette 💾 Mentés; ha az alkalmazást egy beírás utáni
+1 másodpercen belül erőszakkal leállítják, az utolsó beírás elveszhet.
 
-Frissítés: az app magától frissül, ha internettel nyitod meg. Ha az új verzió
-nem látszik: nyisd meg internettel, várj pár másodpercet, zárd be, nyisd meg újra.
-A verziószám a fejlécben, a név mellett látszik.
+A korábbi, Chrome-os telepítés (⋮ menü → „Alkalmazás telepítése”) továbbra is működik,
+de a tableten nem volt megbízható.
 
 ---
 
