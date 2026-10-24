@@ -1,0 +1,56 @@
+﻿Telepites gomb (v25) -- 2026-10-24
+Parancs: node teszt/telepites_teszt.mjs
+
+OK   helyi fájl: magyarázat a webcímmel
+OK   helyi fájl: gomb rejtve
+OK   telepített app: nincs teendő
+OK   telepített app: gomb rejtve
+OK   böngésző ajánlat nélkül: kézi útmutató
+OK   böngésző ajánlat nélkül: gomb látszik
+OK   böngésző ajánlat nélkül: gomb útmutatót mutat
+OK   ajánlat érkezett: "érintsd meg" szöveg
+OK   elfogadás: prompt egyszer hívva
+OK   elfogadás: "Telepítve" + gomb rejtve
+OK   elfogadás: ajánlat elhasználva
+OK   elutasítás: kézi útmutató, gomb látszik
+OK   elutasítás: nincs felugró ablak
+OK   telepítési hiba: hangos üzenet
+OK   appinstalled: "Telepítve" + gomb rejtve
+OK   manifest: display standalone (óra/akku marad)
+OK   manifest: van maskable ikon
+OK   manifest: van 192 és 512-es ikon
+OK   service worker: az új ikon az offline listában
+
+19/19 zöld
+
+Parancs: node teszt/drive_teszt.mjs (utolso sorok)
+MIND ZOLD: 17 teszt
+
+Bongeszo (localhost:8765, 1280x800): Rendszer ful, Telepites kartya latszik, nincs vizszintes gorgetes, konzol hibamentes; hamis beforeinstallprompt-tal: prompt 1x, elfogadas -> 'Telepitve', elutasitas -> kezi utmutato, hiba -> alert; standalone-szimulacio -> 'Telepitett appkent fut'.
+NEM mert: valodi Chrome-telepites a TAB 10 Lite-on.
+
+--- Javitas az ellenor utan (gomb-felirat, teszt-fejlec) ---
+Parancs: node teszt/telepites_teszt.mjs
+OK   helyi fájl: magyarázat a webcímmel
+OK   helyi fájl: gomb rejtve
+OK   telepített app: nincs teendő
+OK   telepített app: gomb rejtve
+OK   böngésző ajánlat nélkül: kézi útmutató
+OK   böngésző ajánlat nélkül: gomb látszik
+OK   böngésző ajánlat nélkül: felirat "Hogyan telepítsem?"
+OK   böngésző ajánlat nélkül: gomb útmutatót mutat
+OK   ajánlat érkezett: "érintsd meg" szöveg
+OK   ajánlat érkezett: felirat "📲 Telepítés"
+OK   elfogadás: prompt egyszer hívva
+OK   elfogadás: "Telepítve" + gomb rejtve
+OK   elfogadás: ajánlat elhasználva
+OK   elutasítás: kézi útmutató, gomb látszik
+OK   elutasítás: nincs felugró ablak
+OK   telepítési hiba: hangos üzenet
+OK   appinstalled: "Telepítve" + gomb rejtve
+OK   manifest: display standalone (óra/akku marad)
+OK   manifest: van maskable ikon
+OK   manifest: van 192 és 512-es ikon
+OK   service worker: az új ikon az offline listában
+
+21/21 zöld

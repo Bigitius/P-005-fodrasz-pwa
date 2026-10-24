@@ -1,8 +1,38 @@
 ﻿# Telepítési útmutató – Márti fodrászata alkalmazás
 
-Ez az útmutató végigvezet azon, hogyan tudod feltenni az alkalmazást az internetre,
-és hogyan tudod feltenni az iPad kezdőképernyőjére, hogy egy ikonra kattintva
-azonnal megnyíljon, akár internet nélkül is.
+## Telepítés a TAB 10 Lite tabletre (Android 14, Chrome) – EZ AZ ALAP
+
+Telepítés után az app saját ikonról, a böngésző címsora nélkül indul
+(az Android felső sávja – óra, akkumulátor – látszik).
+
+1. A tableten nyisd meg a **Chrome**-ot, és írd be:
+   `https://bigitius.github.io/P-005-fodrasz-pwa/`
+2. Az appban érintsd meg felül a **⚙️ Rendszer** fület.
+3. A **📲 Telepítés a tabletre** kártyán érintsd meg a **📲 Telepítés** gombot,
+   majd a felugró kérdésnél: **Telepítés**.
+4. Zárd be a Chrome-ot. Ezentúl a kezdőképernyőn lévő **Márti fodrászata**
+   ikonról indítsd az appot.
+
+Ellenőrzés: indítás után a Rendszer fülön ez áll: „✅ Telepített appként fut”.
+
+Ha a gomb nem indítja a telepítést (pl. a Chrome épp nem ajánlja fel):
+Chrome jobb felső **⋮** menü → **„Alkalmazás telepítése”** vagy
+**„Hozzáadás a kezdőképernyőhöz”**. Ha ott sincs ilyen, az app valószínűleg már
+telepítve van – keresd az ikonját a kezdőképernyőn.
+
+Ha korábban helyi fájlként (Fájlkezelő → `index.html`) használtad: előtte
+a Rendszer fülön **💾 Mentés**, a telepített appban pedig **📂 Visszatöltés**
+ugyanabból a fájlból. A helyi fájl és a telepített app adatai NEM közösek.
+
+Frissítés: az app magától frissül, ha internettel nyitod meg. Ha az új verzió
+nem látszik: nyisd meg internettel, várj pár másodpercet, zárd be, nyisd meg újra.
+A verziószám a fejlécben, a név mellett látszik.
+
+---
+
+# Régebbi útmutatók (iPad, Huawei MediaPad T3, saját tárhely létrehozása)
+
+Az alábbi részek a korábbi eszközökhöz és a kezdeti beállításhoz készültek.
 
 ## 1. lépés – GitHub-fiók létrehozása (ingyenes)
 
@@ -154,4 +184,5 @@ Használat:
 <!-- frissites: v4 helyi fajlkent (file://, szerver nelkul) telepitesi
      alternativa (8. lepes) az otodik offline-javitasi kiserlet utan is
      megbizhatatlan szolgaltatasmunkas miatt, Istvan dontese, 2026-09-06 -->
+<!-- frissites: v5 TAB 10 Lite telepites a Rendszer ful Telepites gombjaval, 2026-10-24 -->
 

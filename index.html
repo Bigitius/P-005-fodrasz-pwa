@@ -1,7 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="hu">
 <head>
-<script>document.documentElement.classList.add((location.protocol!=='http:'&&location.protocol!=='https:')?'tablet-mode':'web-mode');</script>
+<script>document.documentElement.classList.add((location.protocol!=='http:'&&location.protocol!=='https:')?'tablet-mode':'web-mode');
+// 2026-10-24: a Chrome telepítési ajánlatát korán el kell kapni (a Rendszer fül 📲 Telepítés gombja használja)
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.telepitoEsemeny=e;document.dispatchEvent(new Event('telepites-elerheto'));});</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title id="pageTitle">Márti fodrászata</title>
@@ -522,6 +524,11 @@
     <!-- ============ RENDSZER (2026-10-19): mentés, visszatöltés, offline, Drive ============ -->
     <section class="panel view" id="view-rendszer">
       <div class="rsz-grid">
+        <div class="rsz-kartya" id="telepitKartya">
+          <div class="rsz-cim">📲 Telepítés a tabletre</div>
+          <div class="rsz-leiras" id="telepitAllapot">…</div>
+          <button class="backup-btn" id="telepitBtn" title="Az app telepítése a kezdőképernyőre" style="display:none">📲 Telepítés</button>
+        </div>
         <div class="rsz-kartya">
           <div class="rsz-cim">💾 Mentés fájlba</div>
           <div class="rsz-leiras">Az összes foglalást és a leltárt egy fájlba menti a tablet Letöltések mappájába.</div>
@@ -2122,7 +2129,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="24";
+var APP_VER="25";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2256,6 +2263,70 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
       visszaall(eredetiSzoveg, 4000);
     });
   });
+})();
+</script>
+
+<script>
+// === 📲 Telepítés (2026-10-24): a Rendszer fülön megmutatja, hogyan fut az app,
+// és ha böngészőben fut, egy gombbal telepíthető (utána böngészősáv nélkül indul). ===
+(function () {
+  var allapot = document.getElementById('telepitAllapot');
+  var btn = document.getElementById('telepitBtn');
+  if (!allapot || !btn) return;
+  var WEBCIM = 'https://bigitius.github.io/P-005-fodrasz-pwa/';
+  var KEZI = 'Chrome jobb felső ⋮ menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.';
+  var telepitveMost = false;
+
+  function appkentFut() {
+    return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches ||
+      matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches)) ||
+      navigator.standalone === true;
+  }
+
+  function frissit() {
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+      allapot.textContent = 'Most helyi fájlként fut, ezért a böngésző címsora látszik, és így nem telepíthető. ' +
+        'Nyisd meg Chrome-ban ezt a címet: ' + WEBCIM + ' — ott ezen a fülön lesz Telepítés gomb.';
+      btn.style.display = 'none';
+    } else if (appkentFut()) {
+      allapot.textContent = '✅ Telepített appként fut, böngészősáv nélkül. Nincs teendő.';
+      btn.style.display = 'none';
+    } else if (telepitveMost) {
+      allapot.textContent = '✅ Telepítve. Zárd be ezt a böngészőt, és a kezdőképernyőn lévő ikonról indítsd az appot.';
+      btn.style.display = 'none';
+    } else if (window.telepitoEsemeny) {
+      allapot.textContent = 'Most a böngészőben fut. Érintsd meg a gombot, majd: Telepítés. Utána a kezdőképernyő ikonjáról indítsd.';
+      btn.textContent = '📲 Telepítés';
+      btn.style.display = '';
+    } else {
+      allapot.textContent = 'Most a böngészőben fut. Ha már telepítve van, a kezdőképernyő ikonjáról indítsd. ' +
+        'Ha még nincs: ' + KEZI;
+      btn.textContent = '📲 Hogyan telepítsem?';   // nincs Chrome-ajánlat: a gomb csak útmutatót ad
+      btn.style.display = '';
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    var e = window.telepitoEsemeny;
+    if (!e) { alert('A telepítés innen most nem indítható.\n\n' + KEZI + '\n\nHa ott sincs ilyen, az app valószínűleg már telepítve van: keresd az ikonját a kezdőképernyőn.'); return; }
+    window.telepitoEsemeny = null;   // egy ajánlat csak egyszer használható
+    e.prompt();
+    e.userChoice.then(function (v) {
+      if (v && v.outcome === 'accepted') telepitveMost = true;
+      frissit();
+    }, function (err) {
+      alert('Telepítési hiba (küldd el screenshotnak):\n' + (err && err.message ? err.message : String(err)));
+      frissit();
+    });
+  });
+
+  document.addEventListener('telepites-elerheto', frissit);
+  window.addEventListener('appinstalled', function () { telepitveMost = true; window.telepitoEsemeny = null; frissit(); });
+  if (window.matchMedia) {
+    var mq = matchMedia('(display-mode: standalone)');
+    if (mq.addEventListener) mq.addEventListener('change', frissit);
+  }
+  frissit();
 })();
 </script>
 

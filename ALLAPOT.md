@@ -1,5 +1,5 @@
 # ALLAPOT -- P-005-fodrasz-pwa
-Utolso frissites: 2026-10-19
+Utolso frissites: 2026-10-24
 
 Nyilvanos repo: ebbe a fajlba csak olyan kerulhet, ami barkinek lathato lehet. Belso jegyzetek a gitbol kizart BELSO.md-ben vannak.
 
@@ -71,6 +71,16 @@ ALLITOTT: a tableten a v23 megjelenése nem ellenőrzött. A javítás előtti t
 ## Rendszer fül (2026-10-19, app v24, SW-cache v23)
 MERT (bizonyitek/rendszer_ful_2026-10-19.txt): az 5 fül (Főoldal, Foglalás, Névjegyzék, Leltár, Rendszer) a felső sávban, 1280x800-on egy sorban; a Mentés / Visszatöltés / Offline letöltés / Drive gomb a Rendszer fülön, mind működik. Drive-hiba esetén a Rendszer fülön ⚠ jel látszik. Tablet-mode-ban (file://) a Mentés/Visszatöltés most már látszik (a Rendszer fülön van hely), a Drive helyett magyarázó szöveg.
 ALLITOTT: a TAB 10 Lite-on nem próbált.
+
+## Telepítés gomb (2026-10-24, app v25, SW-cache v24, még NEM commitolva)
+Cél-eszköz adatai (a tulajdonos megadta): TAB 10 Lite, modell M10, Android 14, Chrome 155.
+MERT (bizonyitek/telepites_2026-10-24.txt):
+- Rendszer fül első kártyája: „📲 Telepítés a tabletre”. Kiírja, hogyan fut az app (helyi fájl / telepített app / böngésző); böngészőben egy gombbal indítja a Chrome telepítését, ha nincs ajánlat, kézi útmutatót ad („Hogyan telepítsem?”). Hiba hangos.
+- manifest: id, scope, lang, leírás; új Androidos (maskable) ikon: icon-maskable-512.png. display marad standalone (óra/akku látszik — tulajdonosi döntés, 2026-10-24).
+- TELEPITES.md: új, 4 lépéses TAB 10 Lite rész az elején, a régi részek alatta.
+- teszt/telepites_teszt.mjs 21/21 zöld; Drive mock-teszt 17/17. Böngészőben (1280x800, hamis telepítési ajánlattal) kipróbálva, konzol hibamentes.
+- Független ellenőr: RENDBEN; 2 apró megjegyzése (gomb-felirat ajánlat nélkül, teszt-fejléc) javítva.
+ALLITOTT: valódi telepítés a TAB 10 Lite-on nem próbált. Hogy a tablet most helyi fájlból vagy a webcímről fut-e, nem ismert (a v25 a Rendszer fülön kiírja).
 
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
