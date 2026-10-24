@@ -95,7 +95,8 @@ MERT (bizonyitek/telepites_v26_2026-10-24.txt, bizonyitek/telepithetoseg_2026-10
 - Független ellenőr 1 valódi hibát talált (elutasítás után „Várok”-on ragadt), javítva.
 ALLITOTT: Android Chrome-on a 30 mp-es út és a „már telepítve” felismerés nem mért.
 
-## Saját Android-alkalmazás (APK) + web v27 (2026-10-24, még NEM commitolva)
+## Saját Android-alkalmazás (APK) + web v27 (2026-10-24, élesítve)
+MERT: push István jóváhagyásával: 5618d76; Pages "built 5618d76"; élő APK HTTP 200, application/vnd.android.package-archive, sha256 egyezik a helyben építettel (90daa7a2…); élő oldal APP_VER 27, SW v27. Az élőről letöltött APK emulátoron telepítve: az élő v27-et tölti be, „Androidos alkalmazásként fut (v1.0)”, 💾 Mentés → Letöltések. Nem mért: a letöltés Chrome-ból (az emulátor Chrome-ja feltétel-elfogadást kért, nem fogadtam el) és a valódi tablet.
 Ok: a Chrome-os telepítés (v25–v26) a tableten István szerint nem működött.
 MERT (bizonyitek/android_2026-10-24/):
 - android/: WebView-keret (Gradle nélkül épül: android/epit.py), a webes appot tölti be böngészősáv nélkül; marti-fodraszata.apk (1.0, kód 1) a repó gyökerében, a Pages-ről tölthető. Aláírókulcs: android/kulcs/ (gitből kizárva) — biztonsági másolat kell a repón kívül.

@@ -54,3 +54,8 @@ Parancs: node teszt/android_emulator_proba.mjs (proba-APK ujraepitve)
 14/14 zold (fenti futas, a kepek frissitve)
 Kezi: Visszatoltes fajlvalasztoval allowContentAccess=false mellett is mukodik (visszatoltes_kesz.png).
 Eles APK sha256: 90daa7a21266cecd4e4c5eb28eb7b7286ba3c663a9584887f26d89e81175c842; dex-ben localhost: 0; manifest: allowBackup=false, nincs usesCleartextTraffic, nincs debuggable; emulatorra telepitve, elindul.
+
+--- Elesites utan (5618d76) ---
+Pages: built 5618d76; elo APK: HTTP 200, application/vnd.android.package-archive, 102961 bajt, sha256 = helyi (90daa7a2...)
+Elo APK emulatorra telepitve (letoltve az elo cimrol): elo v27-et tolt be, 'Androidos alkalmazaskent fut (alkalmazas v1.0)' (elo_v27_appban.png); Mentes -> /sdcard/Download/Marti-foglalas-2026-10-24-0926.json, 'Mentesfajl letoltve'.
+NEM mert: letoltes Chrome-bol (emulator Chrome elso inditasa felteteleket kert -- nem fogadtam el); valodi TAB 10 Lite.
