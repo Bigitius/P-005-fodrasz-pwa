@@ -30,7 +30,7 @@ function elem(id) {
     classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
     addEventListener() {}, removeEventListener() {}, appendChild(x) { return x; }, insertBefore(x) { return x; },
     setAttribute() {}, getAttribute() { return null; }, removeAttribute() {}, click() {}, focus() {},
-    querySelector() { return null; }, querySelectorAll() { return []; },
+    querySelector(s) { return s === '.anyag-uj' ? { onclick: null } : null; }, querySelectorAll() { return []; },
   };
   Object.defineProperty(e, 'innerHTML', { get: () => belso, set: (s) => { belso = String(s); naplo.push({ id, html: belso }); } });
   return e;
@@ -91,7 +91,7 @@ vm.runInContext('CHEMICALS = loadChemicals();', ctx);
 // ---- ellenőrző: egy innerHTML-szöveg biztonságos-e ----
 const ENGEDETT_CIMKE = new Set(['div', 'span', 'button', 'option', 'select', 'input', 'label', 'p', 'b']);
 const ENGEDETT_ATTR = new Set(['class', 'id', 'style', 'title', 'type', 'value', 'selected', 'min', 'step', 'placeholder',
-  'onclick', 'data-date', 'data-t', 'data-c', 'data-n', 'data-p', 'data-l', 'data-code', 'role', 'aria-label']);
+  'onclick', 'data-date', 'data-t', 'data-i', 'data-c', 'data-n', 'data-p', 'data-l', 'data-code', 'role', 'aria-label']);
 const ENGEDETT_FV = new Set(['openEditById', 'deleteById', 'openDuplaById', 'editContact', 'deleteContact', 'confirmDupla', 'confirmSimaRest']);
 const dekod = (s) => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 function biztonsagos(h) {
@@ -135,16 +135,17 @@ function nezet(nev, fv, elvart) {
 }
 
 const napAllit = 'foMainDate=new Date(2026,10,2); foView=new Date(2026,10,1);';
-nezet('Főoldal', napAllit + 'renderFooldal();', [1, 2, 3, 4, 7, 14, 15]);
+nezet('Főoldal', napAllit + 'renderFooldal();', [1, 2, 3, 7, 14, 15]);
 nezet('Névjegyzék (lista)', 'regName=null; renderNevjegyzek();', [1, 14]);
 nezet('Névjegyzék (kiválasztott név)', 'regName=' + JSON.stringify(NEV) + '; renderNevjegyzek();', [1, 9, 16, 17]);
 nezet('Leltár', 'renderLeltar();', [3, 10, 11, 12]);
-nezet('Foglalás 1. lépés', napAllit + 'bookingStep=1; renderFoglalas();', []);
-nezet('Foglalás 2. lépés', 'selDate="' + NAP + '"; bookingStep=2; renderFoglalas();', [1, 2, 3, 4, 7]);
-nezet('Foglalás 3. lépés (kategóriák)', 'selTime="11:00"; foCat=null; bookingStep=3; renderFoglalas();', []);
-nezet('Foglalás 3. lépés (Festés)', 'foCat="Festés"; bookingStep=3; renderFoglalas();', [3]);
+nezet('Foglalás 3. lépés (kategóriák)', 'selDate="' + NAP + '"; selTime="11:00"; foCat=null; bookingStep=3; renderFoglalas();', []);
+nezet('Foglalás 3. lépés (Festés)', 'SZOLGALTATASOK["Festés"][0].anyagok=[{code:' + JSON.stringify(X(3)) + ',gram:' + JSON.stringify(X(18)) + '}]; foCat="Festés"; bookingStep=3; renderFoglalas();', [3, 18]);
 nezet('Foglalás 4. lépés', 'foCat=null; selService=Object.assign({cat:"Festés"}, SZOLGALTATASOK["Festés"][0]);' +
-  'regLetter="A"; regChemGram=' + JSON.stringify('"><img src=x onerror=alert(13)>') + '; bookingStep=4; renderFoglalas();', [1, 3, 10, 11, 13, 17]);
+  'regLetter="A"; regAnyagok=[{code:' + JSON.stringify('"><img src=x onerror=alert(13)>') + ',gram:' + JSON.stringify('"><img src=x onerror=alert(13)>') + '}]; bookingStep=4; renderFoglalas();', [1, 3, 10, 11, 13, 17]);
+nezet('Módosító ablak', 'openEdit(loadBookings()[0]);', [3]);
+nezet('Kártyák lista', 'SZOLGALTATASOK["Festés"][1].name=' + JSON.stringify(X(19)) + '; renderKartyak();', [19]);
+nezet('Kártya-szerkesztő', 'SZOLGALTATASOK["Festés"][1].anyagok=[{code:' + JSON.stringify(X(20)) + ',gram:' + JSON.stringify(X(21)) + '}]; kartyaNyit("Festés",1);', [20, 21]);
 nezet('Dupla ablak', 'openDuplaById(' + JSON.stringify(UID_A) + '); dupLetter="A"; renderDupBook();', [1, 17]);
 
 // a dupla ablak pihenő-sora: a fájlból jött hibás szegmens-hossz nem kerülhet a gombba (szám vagy semmi)

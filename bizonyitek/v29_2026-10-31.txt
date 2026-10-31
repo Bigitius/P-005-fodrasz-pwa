@@ -1,0 +1,71 @@
+v29 proba (meg NEM feltoltve) -- 2026-10-31
+Parancs: node teszt/v29_chrome_proba.mjs (valodi Chrome, headless, sajat profil)
+OK   próba névjegy (pontos egyezés) törölve, azonos nevű valódi megmaradt
+OK   „Teszt 15p” törölve, valódi foglalás megmaradt
+OK   K001-K003 törölve, a többi anyag megmaradt
+OK   régi egyanyagos foglalás továbbra is levonódik
+OK   v29, nincs Foglalás fül
+OK   rács 7:00-20:00 (26 sor)
+OK   nincs telepítés-segítő
+OK   a felső keret görgetés után is fent van
+OK   a foglalás lépéssora nem csúszik a felső keret alá
+OK   új kártya mentve 7 anyaggal és pihentetéssel
+OK   a beépített kártyák látszanak a listán
+OK   üres név és névütközés elutasítva
+OK   szabad sávra érintve megnyílik a foglalás kitöltött nappal és idővel
+OK   a kártya 7 anyaga előre kitöltve
+OK   percre pontos kezdés mentve
+OK   a Főoldal a foglalás napján marad
+OK   a kártya pontosan 10:37-nél áll
+OK   a foglaláson mind a 7 anyag, az átírt gramm is
+OK   a kártyán látszik az összes anyag
+OK   módosító ablakban is megvan mind a 7 anyag
+OK   „elkészült” után minden anyag levonódik (A2: -25 g, A7: -70 g)
+OK   ütközés: szól, nem ment, a képernyőn marad
+OK   munkaidőn kívül: szól
+OK   átnevezéskor a foglalás neve követi
+OK   törölt kártya: a kategória eltűnik, a foglalás megmarad és menthető
+OK   a mentésfájlba a kártyák is bekerülnek
+OK   újratöltés után megmaradnak a kártyaadatok
+OK   sérült kártyatárnál hibajelzés, a beépített kártyák működnek
+OK   nem volt kezeletlen JavaScript-hiba
+
+29/29 zöld
+
+Parancs: node teszt/xss_teszt.mjs
+28/28 rendben
+Parancs: node teszt/telepites_teszt.mjs
+11/11 zöld
+Parancs: node teszt/drive_teszt.mjs
+MIND ZOLD: 17 teszt
+
+A proba talalt es javitott hiba: uj kategorianal a kartyavalaszto osszeomlott (nincs szine) -> katSzin().
+NEM mert: valodi TAB 10 Lite, valodi erintes; fuggetlen ellenor meg nem nezte at.
+
+--- Kiegeszites (nem kotelezo mezok, nevjegy-valaszto a modosito ablakban) ---
+node teszt/v29_chrome_proba.mjs: 34/34 zöld
+node teszt/xss_teszt.mjs: 28/28 rendben
+node teszt/telepites_teszt.mjs: 11/11 zöld
+node teszt/drive_teszt.mjs: MIND ZOLD: 17 teszt
+
+--- Kiegeszites (nevjegyek mindig latszanak a modosito ablakban; dupla nem orokol; Elkeszult jeloloegyzet) ---
+v29_chrome_proba: 36/36; xss: 28/28; telepites: 11/11; drive: 17 zold (a futtatas ebben a menetben).
+
+--- Racs-igazitas: a sor az elvalaszto vonallal egyutt 72 px volt, a kartya 70 px-szel szamolt (14:00-nal kb. 26 px elcsuszas). Javitva, kovetkezo proba a racssorhoz mer.
+39/39 zöld
+
+--- Anyagsorok javitva (a .modal input szelessege osszenyomta a valasztot): 44/44 zöld; xss 28/28 rendben; telepites 11/11 zöld; drive MIND ZOLD: 17 teszt
+
+--- 5 perces idovalaszto: 48/48 zöld; xss 28/28 rendben; telepites 11/11 zöld; drive MIND ZOLD: 17 teszt
+
+--- Ellenor + biztonsagi leletek utan (2026-10-31) ---
+Javitva: K001-K003 csak erintetlenul (eredeti nev, 500 g, nincs ra foglalas) torlodik; szigoru mentesfajl-ellenorzes (foglalas, leltar, kartyak; __proto__/constructor, szoveges perc, vegtelen, ures lista elutasitva); beepitett kartya neve szerkesztheto; visszatoltesnel a kartyak hibaja hangos, memoria visszaall; Drive-visszatoltes ugyanigy; regi chrome_gomb_proba torolve.
+Teljesitmeny 2000 foglalassal (median, ms, asztali gep): fooldal 2.1, nevjegyzek 1.3, leltar 0, kartyak 0.1, modosito 1.6, foglalas 0.1
+node teszt/v29_chrome_proba.mjs: 53/53 zöld
+node teszt/xss_teszt.mjs: 28/28 rendben
+node teszt/telepites_teszt.mjs: 11/11 zöld
+node teszt/drive_teszt.mjs: MIND ZOLD: 17 teszt
+node teszt/android_emulator_proba.mjs (proba-APK, Android 14 emulator): 16/16 zold. Az elso futas 11/12 volt: az emulator elso indulasakor az app leallt (kezdokepernyo volt elol, a Google-szolgaltatas ujraindulasa, korabban is lattam); ujrafuttatva hibatlan.
+NEM mert: valodi TAB 10 Lite; tablet-mode (file://) racsillesztes.
+
+--- Utolso kartya vedelem + serult kartyatar takaritas: 55/55 zöld; xss 28/28 rendben; telepites 11/11 zöld; drive MIND ZOLD: 17 teszt

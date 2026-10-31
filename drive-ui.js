@@ -98,7 +98,7 @@
   if (CLIENT_ID) {
     ds = DriveSync.create({
       fetch: function (u, i) { return window.fetch(u, i); }, auth: auth, storage: localStorage,
-      getData: function () { return { bookings: loadBookings(), chemicals: CHEMICALS }; },
+      getData: function () { return { bookings: loadBookings(), chemicals: CHEMICALS, kartyak: SZOLGALTATASOK }; },
       onStatus: frissitBadge, isOnline: function () { return navigator.onLine; },
       tiltva: function () { return (window.adathibaVan && adathibaVan()) ? 'a tableten lévő adat sérült, előbb tölts vissza mentésből' : null; },
       setTimer: function (f, ms) { return setTimeout(f, ms); }, clearTimer: function (t) { clearTimeout(t); }
@@ -107,6 +107,8 @@
     var eredetiBookings = window.saveBookings, eredetiChem = window.saveChemicals;
     window.saveBookings = function (a) { var r = eredetiBookings(a); ds.markDirty(); return r; };
     window.saveChemicals = function () { var r = eredetiChem(); ds.markDirty(); return r; };
+    var eredetiKartyak = window.saveKartyak;
+    window.saveKartyak = function () { var r = eredetiKartyak(); ds.markDirty(); return r; };
     window.addEventListener('online', function () { ds.szinkron(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) ds.szinkron(); });
     setInterval(function () { ds.szinkron(); }, 5 * 60 * 1000);
@@ -163,6 +165,7 @@
   async function visszatoltEgyet(elem) {
     try {
       var data = await ds.elonezet(elem.id);
+      if (!mentesErvenyes(data.bookings, data.chemicals, data.kartyak)) throw new Error('Hibás Drive-mentés, nem töltöttem vissza semmit');
       var sor = elem.cimke + '\nMentve: ' + (data.savedAt || '?') + '\nFoglalás: ' + data.bookings.length + ', anyag: ' + (data.chemicals ? data.chemicals.length : 0) +
         '\n\nJelenleg a tableten: ' + loadBookings().length + ' foglalás, ' + CHEMICALS.length + ' anyag.' +
         '\n\nA mostani tableten lévő adatról biztonsági másolat készül. Visszatöltöd?';
@@ -172,8 +175,11 @@
         // jelölnek piszkosnak, azt a motor maga kezeli
         if (!adatCsere(d.bookings, Array.isArray(d.chemicals) ? d.chemicals : null, eredetiBookings, eredetiChem))
           throw new Error('A visszatöltött adat mentése a tabletre nem sikerült, a korábbi állapot maradt');
-        renderFooldal(); renderNevjegyzek(); refreshStep2(); renderLeltar();
+        if (d.kartyak) kartyakVisszatolt(d.kartyak, eredetiKartyak);
+        renderFooldal(); renderNevjegyzek(); renderLeltar(); renderKartyak();
       });
+      probaAdatTorol();   // régi mentésből ne jöjjenek vissza a próbaadatok
+      renderFooldal(); renderNevjegyzek(); renderLeltar();
       toast('Visszatöltve: ' + data.bookings.length + ' foglalás');
       rajzolPanel();
     } catch (e) { hibaToast(e); }

@@ -1,5 +1,5 @@
-// A Rendszer fül "📲 Telepítés" kártyájának és a mentő hídnak automata tesztje (2026-10-24, v27).
-// Az index.html-ből kivágja a Telepítés blokkot és az autoBackupToFile függvényt, és hamis
+// Az Androidos alkalmazás mentő hídjának automata tesztje (2026-10-24, v29-től a telepítés-kártya nélkül).
+// Az index.html-ből kivágja az autoBackupToFile függvényt, és hamis
 // böngésző-környezetben futtatja. Valódi ablakot NEM nyit: elszigetelt vm-környezet, az alert gyűjtő függvény.
 // Futtatás: node teszt/telepites_teszt.mjs
 import { readFileSync } from 'node:fs';
@@ -13,7 +13,6 @@ function kivag(jelolo, vegJel) {
   if (v < 0) throw new Error('Nem található a vége: ' + jelolo);
   return html.slice(k, v + (vegJel === '</script>' ? 0 : vegJel.length));
 }
-const telepites = kivag('// === 📲 Telepítés', '</script>');
 const mentes = kivag('function autoBackupToFile(arr){', '\n}\n');
 
 let jo = 0, rossz = 0;
@@ -21,57 +20,14 @@ function ellenoriz(nev, feltetel, reszlet = '') {
   if (feltetel) { jo++; console.log('OK   ' + nev); } else { rossz++; console.log('HIBA ' + nev + (reszlet ? '  -> ' + reszlet : '')); }
 }
 
-const UA_CHROME = 'Mozilla/5.0 (Linux; Android 14; M10) AppleWebKit/537.36 Chrome/155.0 Safari/537.36';
-const UA_APP = UA_CHROME + ' MartiApp/1.0';
-
-function kartya({ protokoll = 'https:', ua = UA_CHROME, standalone = false, hid = null } = {}) {
-  const elemek = {
-    telepitAllapot: { textContent: '' },
-    telepitBtn: { textContent: '', style: { display: 'none' }, kattintas: null,
-      addEventListener(t, f) { if (t === 'click') this.kattintas = f; } },
-  };
-  const loc = { protocol: protokoll, href: 'https://bigitius.github.io/P-005-fodrasz-pwa/' };
-  const win = { MartiApp: hid };
-  const ctx = {
-    window: win, location: loc, navigator: { userAgent: ua },
-    matchMedia: (q) => ({ matches: standalone && q === '(display-mode: standalone)' }),
-    document: { getElementById: (id) => elemek[id] || null },
-  };
-  win.matchMedia = ctx.matchMedia;
-  vm.createContext(ctx);
-  vm.runInContext(telepites, ctx);
-  return { elemek, loc };
-}
-const sz = (k) => k.elemek.telepitAllapot.textContent;
-const gomb = (k) => k.elemek.telepitBtn;
-
-// 1. saját Androidos appban
-let k = kartya({ ua: UA_APP, hid: { verzio: () => '1.0' } });
-ellenoriz('appban: "Androidos alkalmazásként fut" + verzió', sz(k).includes('Androidos alkalmazásként fut') && sz(k).includes('v1.0'));
-ellenoriz('appban: gomb rejtve', gomb(k).style.display === 'none');
-
-// 2. helyi fájl
-k = kartya({ protokoll: 'file:' });
-ellenoriz('helyi fájl: a webcímre küld', sz(k).includes('helyi fájlként') && sz(k).includes('github.io'));
-ellenoriz('helyi fájl: gomb rejtve', gomb(k).style.display === 'none');
-
-// 3. Chrome-ban: letöltő gomb, lépések, adatátvitel
-k = kartya();
-ellenoriz('böngészőben: "📥 Alkalmazás letöltése" gomb látszik', gomb(k).textContent === '📥 Alkalmazás letöltése' && gomb(k).style.display === '');
-ellenoriz('böngészőben: előbb Mentés, utána Visszatöltés', sz(k).includes('💾 Mentés') && sz(k).includes('📂 Visszatöltés'));
-ellenoriz('böngészőben: engedélykérésre figyelmeztet', sz(k).includes('engedélyt kér'));
-gomb(k).kattintas();
-ellenoriz('gomb: az APK-t tölti le', k.loc.href === 'marti-fodraszata.apk', k.loc.href);
-
-// 4. webes ikonról (korábbi PWA-telepítés) is felkínálja
-k = kartya({ standalone: true });
-ellenoriz('webes ikonról: szintén letöltő gomb', sz(k).startsWith('Most webes ikonról fut') && gomb(k).style.display === '');
+// 1. a telepítés-segítő kártya 2026-10-31-én kikerült (tulajdonosi döntés)
+ellenoriz('a Rendszer fülön nincs telepítés-segítő', !html.includes('telepitKartya') && !html.includes('telepitBtn'));
 
 // 5. mentő híd az autoBackupToFile-ban
 function mentesKorny(hid) {
   const alertek = [], letoltesek = [];
   const ctx = {
-    window: { MartiApp: hid }, alert: (m) => alertek.push(m), CHEMICALS: [{ code: 'K1' }],
+    window: { MartiApp: hid }, alert: (m) => alertek.push(m), CHEMICALS: [{ code: 'K1' }], SZOLGALTATASOK: {},
     fmtDateTime: () => '2026-10-24 10:00', JSON, Date, String, Blob: class { constructor(p) { this.p = p; } },
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} }, setTimeout: () => {},
     document: { createElement: () => ({ style: {}, click() { letoltesek.push(this.download); } }), body: { appendChild() {}, removeChild() {} } },

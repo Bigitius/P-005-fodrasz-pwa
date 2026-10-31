@@ -63,18 +63,26 @@ try {
   const allapot = JSON.parse(await k.ertek(`JSON.stringify({ver: APP_VER, ua: navigator.userAgent,
     hid: typeof window.MartiApp, verzio: window.MartiApp && MartiApp.verzio(),
     appMode: document.documentElement.classList.contains('app-mode'),
-    kartya: document.getElementById('telepitAllapot').textContent,
     driveRejtve: getComputedStyle(document.getElementById('driveBadge')).display === 'none'})`));
   console.log('Betöltött oldal:', k.url, '| verzió:', allapot.ver);
-  ellenoriz('az app a weboldalt tölti be (v27)', allapot.ver === '27', allapot.ver);
+  ellenoriz('az app a weboldalt tölti be (v29)', allapot.ver === '29', allapot.ver);
   ellenoriz('böngésző-azonosítóban MartiApp jel', / MartiApp\//.test(allapot.ua));
   ellenoriz('a mentő híd elérhető', allapot.hid === 'object' && !!allapot.verzio);
-  ellenoriz('app-mode és "Androidos alkalmazásként fut"', allapot.appMode && allapot.kartya.includes('Androidos alkalmazásként fut'), allapot.kartya);
+  ellenoriz('app-mode bekapcsolva az appban', allapot.appMode);
   ellenoriz('Drive-gomb rejtve az appban', allapot.driveRejtve);
   const rossz = await k.ertek(`MartiApp.mentes('rossz.apk', 'x')`);
   ellenoriz('híd: tiltott fájlnevet elutasít', String(rossz).startsWith('hiba:'), rossz);
   const jo_ = await k.ertek(`MartiApp.mentes('Márti-foglalás-2000-01-01-0000.json', '{"proba":1}')`);
   ellenoriz('híd: a saját mentésfájl-nevet elfogadja', String(jo_).startsWith('ok:'), jo_);
+
+  // v29 az appban: fix felső keret, óra+perc választó, kártya a rácson (a beépített nézetben is)
+  const v29 = JSON.parse(await k.ertek(`(function(){ showTab('fooldal'); scrollTo(0,800);
+    var h=document.querySelector('header.top').getBoundingClientRect().top, sc=scrollY;
+    var cell=document.querySelector('#foTimeline .tcell[data-t]'); cell.click();
+    var o={h:h,sc:sc,nezet:document.querySelector('.view.active').id,perc:document.getElementById('startTimeP').options.length};
+    foglalasBezar(); scrollTo(0,0); return JSON.stringify(o); })()`));
+  ellenoriz('appban: fix felső keret görgetés után', v29.sc > 0 && v29.h === 0, JSON.stringify(v29));
+  ellenoriz('appban: szabad sávra nyílik a foglalás, 12 perc-lehetőség', v29.nezet === 'view-foglalas' && v29.perc === 12, JSON.stringify(v29));
 
   // 2. adatmegmaradás: próbakulcs + a valódi foglalás-tároló, app leállítása és újraindítása
   const jel = 'proba-' + Date.now();
@@ -99,7 +107,7 @@ try {
   k = await kapcsolodik();
   const offlineVer = await k.ertek(`typeof APP_VER!=='undefined' ? APP_VER : document.body.innerText.slice(0,80)`);
   kep('android_offline.png');
-  ellenoriz('internet (szerver) nélkül is elindul a v27', offlineVer === '27', String(offlineVer));
+  ellenoriz('internet (szerver) nélkül is elindul a v29', offlineVer === '29', String(offlineVer));
   k.zar();
   adb('reverse', 'tcp:8765', 'tcp:8765');
 

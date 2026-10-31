@@ -6,18 +6,16 @@ Az app egy saját Android-alkalmazás (`marti-fodraszata.apk`): saját ikonról,
 böngészősáv nélkül indul (az Android felső sávja – óra, akkumulátor – látszik).
 Nem függ a Chrome telepítési ajánlatától.
 
-1. A tableten nyisd meg a **Chrome**-ot, és írd be:
-   `https://bigitius.github.io/P-005-fodrasz-pwa/`
-2. **⚙️ Rendszer** fül → **💾 Mentés** (az alkalmazás adatai külön vannak a Chrome-étól,
-   így viszed át őket).
-3. Ugyanott: **📥 Alkalmazás letöltése**. A letöltés végén érintsd meg a letöltött
-   fájlt (vagy: Fájlkezelő → Letöltések → `marti-fodraszata.apk`).
+1. Ha már használod az appot: **⚙️ Rendszer → 💾 Mentés** (az alkalmazás adatai külön vannak
+   a Chrome-étól, így viszed át őket).
+2. A tableten nyisd meg a **Chrome**-ot, és írd be:
+   `https://bigitius.github.io/P-005-fodrasz-pwa/marti-fodraszata.apk`
+3. A letöltés végén érintsd meg a letöltött fájlt (vagy: Fájlkezelő → Letöltések →
+   `marti-fodraszata.apk`).
 4. Első alkalommal az Android engedélyt kér („ismeretlen alkalmazások”):
    **Beállítások** → **Engedélyezés ebből a forrásból** bekapcsolása → vissza.
 5. **Telepítés** → **Megnyitás**. Az ikon („Márti fodrászata”) a kezdőképernyőre kerül.
 6. Az alkalmazásban: **⚙️ Rendszer** → **📂 Visszatöltés** → a 2. lépésben mentett fájl.
-
-Ellenőrzés: a Rendszer fülön ez áll: „✅ Androidos alkalmazásként fut”.
 
 Frissítés: a tartalom (foglalás, leltár stb.) magától frissül, ha internettel indítod.
 Az alkalmazást csak akkor kell újra letölteni, ha ezt külön kérjük.

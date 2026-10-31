@@ -1,5 +1,5 @@
 # ALLAPOT -- P-005-fodrasz-pwa
-Utolso frissites: 2026-10-24
+Utolso frissites: 2026-10-31
 
 Nyilvanos repo: ebbe a fajlba csak olyan kerulhet, ami barkinek lathato lehet. Belso jegyzetek a gitbol kizart BELSO.md-ben vannak.
 
@@ -110,6 +110,16 @@ ALLITOTT / nyitott: valódi TAB 10 Lite-on nem próbált; GitHub-fiók 2FA (a f�
 ## XSS-javítás (2026-10-24, app v28, SW-cache v28, élesítve)
 MERT (bizonyitek/xss_2026-10-24.txt): 29 innerHTML-hely átnézve (26 index.html, 3 drive-ui.js), a felhasználói adatok escape-elve; teszt/xss_teszt.mjs 26/26; böngészőben rosszindulatú névvel/kóddal: 0 befecskendezett elem, 0 felugró ablak, 0 konzolhiba; független ellenőr: RENDBEN. telepites_teszt 19/19, Drive 17/17. Push István jóváhagyásával.
 ALLITOTT: a tableten nem próbált (a webes tartalommal az APK magától frissül).
+
+## v29 (2026-10-31, app v29, SW-cache v29)
+MERT (bizonyitek/v29_2026-10-31.txt, tesztek: teszt/v29_chrome_proba.mjs valódi Chrome-ban, android_emulator_proba.mjs Android 14 emulátoron):
+- Munkaidő 7:00-20:00. A Foglalás fül rejtve: a Főoldal szabad sávjára érintve nyílik, a nap és a kezdés kitöltve. Kezdés: óra + perc legördülő, 5 perces lépés (korábbi nem 5 perces idő megmarad).
+- Rendszer: telepítés-segítő kikerült; új „Kártyák” rész: szolgáltatáskártyák szerkesztése, új, törlés (az utolsó nem törölhető). Tárolás: fodrasz_kartyak_v1, a mentésfájl és a Drive is viszi.
+- Kártyánként tetszőleges számú anyag grammal, foglaláskor és módosításkor átírható; az „elkészült” pipára mind levonódik; a régi egyanyagos foglalások érvényesek maradnak.
+- Név, telefon, anyag nem kötelező. Módosító ablakban névjegy-választó. Dupla kártya mezői üresek, a B nem örökli az A adatait. Felső keret fix. Rács és kártyák pontosan illeszkednek.
+- Próbaadat: a régi 5 névjegy és a Teszt 15p pontos egyezésre törlődik; K001-K003 csak érintetlenül (eredeti név, 500 g, nincs rá foglalás).
+- Mentésfájl-visszatöltés szigorú ellenőrzéssel. Független ellenőr és biztonsági átvizsgálás leletei javítva.
+ALLITOTT: valódi TAB 10 Lite-on nem próbált; tablet-mode (file://) rácsillesztés nem mért; a Dupla kártya választéka név szerint köt, átnevezett festés kimarad belőle.
 
 ## Mi nyitott
 - 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).

@@ -103,7 +103,7 @@
       var d = getData();
       return {
         app: 'Márti fodrászata', formatum: 1, savedAt: idoStr(now()), deviceId: st.deviceId,
-        bookings: d.bookings, chemicals: d.chemicals
+        bookings: d.bookings, chemicals: d.chemicals, kartyak: d.kartyak
       };
     }
     function ervenyes(data) {
