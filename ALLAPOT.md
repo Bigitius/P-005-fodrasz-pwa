@@ -111,7 +111,8 @@ ALLITOTT / nyitott: valódi TAB 10 Lite-on nem próbált; GitHub-fiók 2FA (a f�
 MERT (bizonyitek/xss_2026-10-24.txt): 29 innerHTML-hely átnézve (26 index.html, 3 drive-ui.js), a felhasználói adatok escape-elve; teszt/xss_teszt.mjs 26/26; böngészőben rosszindulatú névvel/kóddal: 0 befecskendezett elem, 0 felugró ablak, 0 konzolhiba; független ellenőr: RENDBEN. telepites_teszt 19/19, Drive 17/17. Push István jóváhagyásával.
 ALLITOTT: a tableten nem próbált (a webes tartalommal az APK magától frissül).
 
-## v29 (2026-10-31, app v29, SW-cache v29)
+## v29 (2026-10-31, app v29, SW-cache v29, élesítve)
+MERT: push István jóváhagyásával: 3f3e64e; Pages "built 3f3e64e"; élő oldal APP_VER 29, SW v29, APK HTTP 200.
 MERT (bizonyitek/v29_2026-10-31.txt, tesztek: teszt/v29_chrome_proba.mjs valódi Chrome-ban, android_emulator_proba.mjs Android 14 emulátoron):
 - Munkaidő 7:00-20:00. A Foglalás fül rejtve: a Főoldal szabad sávjára érintve nyílik, a nap és a kezdés kitöltve. Kezdés: óra + perc legördülő, 5 perces lépés (korábbi nem 5 perces idő megmarad).
 - Rendszer: telepítés-segítő kikerült; új „Kártyák” rész: szolgáltatáskártyák szerkesztése, új, törlés (az utolsó nem törölhető). Tárolás: fodrasz_kartyak_v1, a mentésfájl és a Drive is viszi.
@@ -122,12 +123,12 @@ MERT (bizonyitek/v29_2026-10-31.txt, tesztek: teszt/v29_chrome_proba.mjs valódi
 ALLITOTT: valódi TAB 10 Lite-on nem próbált; tablet-mode (file://) rácsillesztés nem mért; a Dupla kártya választéka név szerint köt, átnevezett festés kimarad belőle.
 
 ## Mi nyitott
-- 2026-10-13 -- Igazsagforras tisztazando (reszletek: BELSO.md).
-- 2026-10-13 -- A seed tesztadatok a tortenetben maradnak; a tulajdonos szerint rendben. A tortenetet nem tisztitjuk (tulajdonosi dontes, 2026-10-13).
+- (2026-10-13) REGOTA ALL -- Igazságforrás tisztázandó (részletek: BELSO.md); a Drive-on lévő `index.v2.html` nincs összefésülve.
+- (2026-10-16) REGOTA ALL -- Drive-mentés: OAuth kliensazonosító (Google Cloud) hiányzik; az Androidos appban a Google-belépés amúgy sem működik, ezért dönteni kell, kell-e még.
+- (2026-10-16) REGOTA ALL -- PIN/titkosítás a helyi tablet\app.html-ben: átvételről tulajdonosi döntés kell.
+- (2026-10-24) A valódi tableten az APK telepítése és az app működése nem igazolt.
+- (2026-10-24) Aláírókulcs (android/kulcs) biztonsági másolata a repón kívül; GitHub-fiók kétlépcsős belépése: István teendője, nincs visszajelzés.
 
-- 2026-10-16 -- Drive-mentés: OAuth kliensazonosító létrehozása (Google Cloud), beírása a drive-config.js-be, valódi próba a TAB 10 Lite-on.
-- 2026-10-16 -- Kérdés: a leltár alap "próba kódjai" (K001–K003, 500 g) maradjanak-e friss telepítésnél.
-- 2026-10-16 -- Igazságforrás: a Drive-mentés a GitHub index.html-re épült, a Drive-on lévő `index.v2.html`-lel nincs összefésülve.
-
-## Kovetkezo lepes (terv)
-- 1. a sorban: uj verzio (a tartalmat a tulajdonos donti el).
+## Kovetkezo lepes (terv, szandek)
+- István kipróbálja a v29-et a tableten (az app internettel indítva magától frissül).
+- Igazi anyagok felvétele a Leltárba, utána a kártyákhoz rendelés a Rendszer > Kártyák részben.
