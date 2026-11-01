@@ -331,6 +331,7 @@ if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.a
   .chem-card{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;position:relative;overflow:hidden}
   .chem-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2cm;background:var(--purple2)}
   .chem-card>*{position:relative;padding-left:2.3cm}
+  .chem-card>.chem-bar{padding-left:0;margin-left:2.3cm}   /* a csík ne lógjon a lila sávba */
   .chem-code{font-weight:800;font-size:17px;letter-spacing:.5px}
   .chem-name{font-size:12px;color:var(--muted);margin-top:2px}
   .chem-rem{font-size:26px;font-weight:800;margin-top:10px}
@@ -405,7 +406,12 @@ if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.a
   .rsz-kartya .backup-btn{margin:auto 0 0;align-self:flex-start;min-height:48px;font-size:15px;padding:10px 18px}
   .chem-act{display:flex;gap:8px;margin-top:10px}
   .chem-act button{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:14px;cursor:pointer}
-  .chem-act .chem-del{border-color:var(--bad)}
+  .chem-act .chem-feltolt{border-color:var(--ok)}
+  .feltolt-sor{display:flex;gap:8px}
+  .feltolt-sor input,.modal .feltolt-sor input{flex:1 1 0;width:0;min-width:0;min-height:44px;font-size:18px;font-weight:700}
+  .feltolt-sor select,.modal .feltolt-sor select{flex:none;width:auto;min-height:44px}
+  .feltolt-osszeg{font-weight:700;margin-top:10px;font-size:15px}
+  .anyag-torles{margin-top:14px;min-height:44px;width:100%;border-radius:10px;border:1px solid var(--bad);background:transparent;color:var(--txt);font-size:14px;cursor:pointer}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 26px}
 
   /* TABLET-MODE: kis kepernyos, nem http(s)-kent (file:// / content://) futo Huawei tablet -- nem erinti az iPad/web valtozatot */
@@ -592,6 +598,52 @@ if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.a
       <div class="modal-acts">
         <button class="cancel" id="edCancel">Mégse</button>
         <button class="save" id="edSave">Mentés</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LELTÁR: ANYAG FELVÉTELE / SZERKESZTÉSE -->
+  <div class="modal-mask" id="anyagMask">
+    <div class="modal">
+      <h3 id="anCim">Anyag</h3>
+      <label>Kód</label>
+      <input type="text" id="anKod">
+      <label>Név</label>
+      <input type="text" id="anNev">
+      <label>Egy tubus (gramm)</label>
+      <input type="number" id="anTubus" min="1" step="1">
+      <div id="anUjSor">
+        <label>Induló készlet (tubus)</label>
+        <input type="number" id="anDb" min="0" step="0.5">
+      </div>
+      <div id="anSzerkSor">
+        <label>Összes feltöltve (gramm) — csak javításhoz</label>
+        <input type="number" id="anOsszes" min="0" step="1">
+      </div>
+      <div class="modal-err" id="anErr"></div>
+      <div class="modal-acts">
+        <button class="cancel" id="anMegse">Mégse</button>
+        <button class="save" id="anMent">Mentés</button>
+      </div>
+      <button type="button" class="anyag-torles" id="anTorol">🗑 Anyag törlése</button>
+    </div>
+  </div>
+
+  <!-- LELTÁR: FELTÖLTÉS -->
+  <div class="modal-mask" id="feltoltMask">
+    <div class="modal">
+      <h3 id="ftCim">➕ Feltöltés</h3>
+      <div class="rsz-leiras" id="ftMost"></div>
+      <label>Mennyiség</label>
+      <div class="feltolt-sor">
+        <input type="number" id="ftDb" min="0" step="any" aria-label="Mennyiség">
+        <select id="ftEgyseg" aria-label="Egység"></select>
+      </div>
+      <div class="feltolt-osszeg" id="ftOsszeg"></div>
+      <div class="modal-err" id="ftErr"></div>
+      <div class="modal-acts">
+        <button class="cancel" id="ftMegse">Mégse</button>
+        <button class="save" id="ftMent">Feltöltés</button>
       </div>
     </div>
   </div>
@@ -909,7 +961,7 @@ function foglalasErvenyes(x){
 }
 function mentesErvenyes(foglalasok,anyagok,kartyak){
   if(!Array.isArray(foglalasok)||!foglalasok.every(foglalasErvenyes)) return false;
-  if(anyagok!=null&&!(Array.isArray(anyagok)&&anyagok.every(function(c){return c&&typeof c.code==='string'&&typeof c.start==='number'&&isFinite(c.start);}))) return false;
+  if(anyagok!=null&&!(Array.isArray(anyagok)&&anyagok.every(function(c){return c&&typeof c.code==='string'&&typeof c.start==='number'&&isFinite(c.start)&&(c.tubus==null||pozSzam(c.tubus));}))) return false;
   if(kartyak!=null&&!kartyakErvenyes(kartyak)) return false;
   return true;
 }
@@ -983,24 +1035,8 @@ function anyagSor(lista,done){
   if(!lista.length) return '';
   return '<div class="chem-line">🧪 '+lista.map(function(x){return escapeHtml(x.code)+' · '+escapeHtml(x.gram)+'g';}).join(', ')+(done?' ✓':'')+'</div>';
 }
-// ---- Új anyag hozzáadása a Leltárban (ua. az egyszerű prompt-os minta, mint a névjegynél) ----
-function addChemical(){
-  var code=prompt('Új anyag kódja (rövid azonosító, pl. K004):');
-  if(!code||!code.trim()) return;
-  code=code.trim();
-  if(CHEMICALS.some(function(c){return c.code===code;})){ toast('Már van ilyen kódú anyag.'); return; }
-  var name=prompt('Anyag neve:','');
-  if(name===null) return;
-  name=(name||'').trim()||code;
-  var startStr=prompt('Kezdő mennyiség (gramm):','500');
-  if(startStr===null) return;
-  var start=parseInt(startStr,10);
-  if(isNaN(start)||start<0) start=0;
-  CHEMICALS.push({code:code, name:name, start:start});
-  saveChemicals();
-  renderLeltar();
-  toast('Anyag hozzáadva: '+name);
-}
+// egy tubus grammban (anyagonként állítható, alapból 100 g)
+function tubusG(c){ return c&&c.tubus>0 ? c.tubus : 100; }
 // szolgáltatás nevéből gramm kinyerése, pl. "Rövid haj (50g)" -> 50
 function gramFromName(name){
   var m=String(name).match(/(\d+)\s*g\b/i);
@@ -2086,7 +2122,7 @@ document.getElementById('addNameBtn').onclick=function(){
   renderNevjegyzek();
   toast('Névjegy hozzáadva: '+nm);
 };
-document.getElementById('addChemBtn').onclick=addChemical;
+document.getElementById('addChemBtn').onclick=function(){ anyagNyit(null); };
 // ---- Névjegy módosítása / törlése ----
 function editContact(name){
   var all=loadBookings();
@@ -2180,54 +2216,128 @@ function renderLeltar(){
       '<div class="chem-name">'+escapeHtml(c.name)+'</div>'+
       '<div class="chem-rem">'+escapeHtml(rem)+' <span class="u">g</span></div>'+
       '<div class="chem-bar"><div class="chem-fill" style="width:'+pct+'%"></div></div>'+
-      '<div class="chem-sub">Kezdő: '+escapeHtml(c.start)+' g · Maradék: '+escapeHtml(rem)+' g</div>'+
+      '<div class="chem-sub">Összes feltöltve: '+escapeHtml(c.start)+' g</div>'+
+      '<div class="chem-sub">Egy tubus: '+escapeHtml(tubusG(c))+' g</div>'+
       '<div class="chem-act">'+
         '<button type="button" class="chem-edit" data-code="'+escapeHtml(c.code)+'">✏️ Szerkeszt</button>'+
-        '<button type="button" class="chem-del" data-code="'+escapeHtml(c.code)+'">🗑 Töröl</button>'+
+        '<button type="button" class="chem-feltolt" data-code="'+escapeHtml(c.code)+'">➕ Feltöltés</button>'+
       '</div>'+
     '</div>';
   }).join('');
 }
-// ---- Leltári tétel szerkesztése / törlése (prompt-os minta, mint az addChemical) ----
+// ---- Leltári tétel felvétele, szerkesztése, törlése, feltöltése ----
 function chemUsageCount(code){
   return loadBookings().filter(function(b){return bkAnyagok(b).some(function(x){return x.code===code;});}).length;
 }
-function editChemical(code){
-  var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return;
-  var newCode=prompt('Anyag kódja:',c.code);
-  if(newCode===null) return;
-  newCode=(newCode||'').trim();
-  if(!newCode){ toast('A kód nem lehet üres.'); return; }
-  if(newCode!==c.code && CHEMICALS.some(function(x){return x.code===newCode;})){ toast('Már van ilyen kódú anyag.'); return; }
-  var name=prompt('Anyag neve:',c.name);
-  if(name===null) return;
-  name=(name||'').trim()||newCode;
-  var startStr=prompt('Kezdő mennyiség (gramm):',String(c.start));
-  if(startStr===null) return;
-  var start=parseInt(startStr,10);
-  if(isNaN(start)||start<0){ toast('Hibás mennyiség, nem mentettem.'); return; }
-  if(newCode!==c.code){
-    var all=loadBookings(), n=0;
-    all.forEach(function(b){
-      if(b.chemCode===c.code){ b.chemCode=newCode; n++; }
-      if(Array.isArray(b.anyagok)) b.anyagok.forEach(function(x){ if(x.code===c.code){ x.code=newCode; n++; } });
-    });
-    if(n) saveBookings(all);
-    var kv=false;
-    Object.keys(SZOLGALTATASOK).forEach(function(k){ SZOLGALTATASOK[k].forEach(function(s){ (s.anyagok||[]).forEach(function(x){ if(x.code===c.code){ x.code=newCode; kv=true; } }); }); });
-    if(kv) saveKartyak();
-  }
-  c.code=newCode; c.name=name; c.start=start;
-  saveChemicals();
-  renderLeltar();
-  toast('Anyag módosítva: '+name);
+var anCel=null;
+function anyagNyit(code){
+  var c=code==null?null:CHEMICALS.find(function(x){return x.code===code;});
+  if(code!=null&&!c) return;
+  anCel=c;
+  document.getElementById('anCim').textContent=c?'✏️ Anyag szerkesztése':'＋ Új anyag';
+  document.getElementById('anKod').value=c?c.code:'';
+  document.getElementById('anNev').value=c?c.name:'';
+  document.getElementById('anTubus').value=tubusG(c);
+  document.getElementById('anDb').value='1';
+  document.getElementById('anOsszes').value=c?c.start:'';
+  document.getElementById('anUjSor').style.display=c?'none':'';
+  document.getElementById('anSzerkSor').style.display=c?'':'none';
+  document.getElementById('anTorol').style.display=c?'':'none';
+  document.getElementById('anErr').textContent='';
+  document.getElementById('anyagMask').classList.add('show');
 }
+function anyagZar(){ document.getElementById('anyagMask').classList.remove('show'); anCel=null; }
+function anyagMent(){
+  var hiba=function(m){ document.getElementById('anErr').textContent=m; };
+  var kod=document.getElementById('anKod').value.trim();
+  var nev=document.getElementById('anNev').value.trim()||kod;
+  var tubus=parseInt(document.getElementById('anTubus').value,10);
+  if(!kod) return hiba('Add meg a kódot!');
+  if(!(tubus>0)) return hiba('Add meg, hány gramm egy tubus!');
+  var c=anCel;
+  if((!c||kod!==c.code)&&CHEMICALS.some(function(x){return x.code===kod;})) return hiba('Már van ilyen kódú anyag.');
+  var start;
+  if(c){
+    start=parseInt(document.getElementById('anOsszes').value,10);
+    if(isNaN(start)||start<0) return hiba('Hibás mennyiség!');
+  } else {
+    var db=parseFloat(document.getElementById('anDb').value);
+    if(isNaN(db)||db<0) return hiba('Hibás induló készlet!');
+    start=Math.round(db*tubus);
+  }
+  if(c){
+    if(kod!==c.code){
+      var regi=c.code, all=loadBookings(), n=0;
+      all.forEach(function(b){
+        if(b.chemCode===regi){ b.chemCode=kod; n++; }
+        if(Array.isArray(b.anyagok)) b.anyagok.forEach(function(x){ if(x.code===regi){ x.code=kod; n++; } });
+      });
+      if(n) saveBookings(all);
+      var kv=false;
+      Object.keys(SZOLGALTATASOK).forEach(function(k){ SZOLGALTATASOK[k].forEach(function(s){ (s.anyagok||[]).forEach(function(x){ if(x.code===regi){ x.code=kod; kv=true; } }); }); });
+      if(kv) saveKartyak();
+    }
+    c.code=kod; c.name=nev; c.start=start; c.tubus=tubus;
+  } else {
+    CHEMICALS.push({code:kod, name:nev, start:start, tubus:tubus});
+  }
+  if(saveChemicals()===false) return hiba('A mentés nem sikerült!');
+  anyagZar(); renderLeltar();
+  toast('Anyag mentve: '+nev);
+}
+// ---- Feltöltés: a raktárban lévő mennyiséghez adja hozzá (tubusban vagy grammban) ----
+var ftCel=null;
+function ftGramm(){
+  var db=parseFloat(document.getElementById('ftDb').value);
+  if(isNaN(db)||db<=0||db>1000000) return 0;   // ésszerű felső határ (elgépelés, túlcsordulás ellen)
+  return document.getElementById('ftEgyseg').value==='tubus' ? Math.round(db*tubusG(ftCel)) : Math.round(db);
+}
+function ftOsszegRajz(){
+  var g=ftGramm();
+  document.getElementById('ftOsszeg').textContent = g>0
+    ? '+ '+g+' g → új maradék: '+(chemRemaining(ftCel.code)+g)+' g' : 'Add meg a mennyiséget!';
+}
+function feltoltNyit(code){
+  var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return;
+  ftCel=c;
+  document.getElementById('ftCim').textContent='➕ Feltöltés — '+c.code;
+  document.getElementById('ftMost').textContent=c.name+' · most a raktárban: '+chemRemaining(c.code)+' g';
+  document.getElementById('ftDb').value='1';
+  document.getElementById('ftEgyseg').innerHTML='<option value="tubus">tubus ('+escapeHtml(tubusG(c))+' g)</option><option value="gramm">gramm</option>';
+  document.getElementById('ftErr').textContent='';
+  ftOsszegRajz();
+  document.getElementById('feltoltMask').classList.add('show');
+}
+function feltoltZar(){ document.getElementById('feltoltMask').classList.remove('show'); ftCel=null; }
+function feltoltMent(){
+  var g=ftGramm();
+  if(!(g>0)){ document.getElementById('ftErr').textContent='Add meg a mennyiséget!'; return; }
+  var c=ftCel, regi=c.start;
+  c.start=(typeof regi==='number'&&isFinite(regi)?regi:0)+g;
+  if(saveChemicals()===false){ c.start=regi; document.getElementById('ftErr').textContent='A mentés nem sikerült, a készlet nem változott.'; return; }
+  feltoltZar(); renderLeltar();
+  toast('Feltöltve: '+c.code+' +'+g+' g → '+chemRemaining(c.code)+' g');
+}
+document.getElementById('anMent').onclick=anyagMent;
+document.getElementById('anMegse').onclick=anyagZar;
+document.getElementById('anTorol').onclick=function(){ var c=anCel; if(c&&deleteChemical(c.code)) anyagZar(); };
+document.getElementById('anyagMask').addEventListener('click',function(e){ if(e.target===this) anyagZar(); });
+document.getElementById('ftMent').onclick=feltoltMent;
+document.getElementById('ftMegse').onclick=feltoltZar;
+document.getElementById('ftDb').addEventListener('input',ftOsszegRajz);
+document.getElementById('ftEgyseg').addEventListener('change',function(){
+  // egységváltáskor az érték ugyanazt a mennyiséget jelentse
+  var d=document.getElementById('ftDb'), v=parseFloat(d.value), t=tubusG(ftCel);
+  if(!isNaN(v)&&v>0) d.value=this.value==='gramm' ? Math.round(v*t) : Math.round(v/t*100)/100;
+  ftOsszegRajz();
+});
+document.getElementById('feltoltMask').addEventListener('click',function(e){ if(e.target===this) feltoltZar(); });
 function deleteChemical(code){
   var c=CHEMICALS.find(function(x){return x.code===code;}); if(!c) return;
   var n=chemUsageCount(code);
   var msg='Biztosan törlöd: '+c.code+' · '+c.name+'?';
   if(n) msg+=' ('+n+' foglalás hivatkozik erre az anyagra. A foglalások megmaradnak, de az anyag fogyása nem lesz többé levonva sehonnan.)';
-  if(!confirm(msg)) return;
+  if(!confirm(msg)) return false;
   CHEMICALS.splice(CHEMICALS.indexOf(c),1);
   saveChemicals();
   // a kártyák alaplistájáról is lekerül (a régi foglalásokon megmarad)
@@ -2238,11 +2348,12 @@ function deleteChemical(code){
   if(kv) saveKartyak();
   renderLeltar();
   toast('Anyag törölve: '+c.name);
+  return true;
 }
 document.addEventListener('click',function(e){
-  var t=e.target.closest&&e.target.closest('.chem-edit,.chem-del'); if(!t) return;
+  var t=e.target.closest&&e.target.closest('.chem-edit,.chem-feltolt'); if(!t) return;
   var code=t.getAttribute('data-code');
-  if(t.classList.contains('chem-edit')) editChemical(code); else deleteChemical(code);
+  if(t.classList.contains('chem-edit')) anyagNyit(code); else feltoltNyit(code);
 });
 
 // ============================================================================
@@ -2419,7 +2530,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="31";
+var APP_VER="32";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;

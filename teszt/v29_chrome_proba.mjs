@@ -66,7 +66,7 @@ try {
   r = await j(`${stub} showTab('fooldal'); var c=[...document.querySelectorAll('#foTimeline .tcell[data-t]')];
     return {ver:APP_VER, ful:[...document.querySelectorAll('.tab')].map(t=>t.dataset.tab), elso:c[0].dataset.t, utolso:c[c.length-1].dataset.t, sorok:document.querySelectorAll('#foTimeline .trow').length,
       telepit:!!document.getElementById('telepitKartya')};`);
-  e('v30, nincs Foglalás fül', r.ver === '31' && !r.ful.includes('foglalas') && r.ful.length === 4, r);
+  e('v30, nincs Foglalás fül', r.ver === '32' && !r.ful.includes('foglalas') && r.ful.length === 4, r);
   e('rács 7:00-20:00 (26 sor)', r.elso === '07:00' && r.utolso === '19:30' && r.sorok === 26, r);
   e('nincs telepítés-segítő', !r.telepit);
 
@@ -242,6 +242,41 @@ try {
   await betolt();
   r = await j(`return {a:SZOLGALTATASOK['Festés'][0].anyagok, gorget:document.documentElement.scrollWidth>innerWidth};`);
   e('újratöltés után megmaradnak a kártyaadatok', r.a && r.a[0].gram === 5 && !r.gorget, r);
+
+  // --- leltár: feltöltés tubusban és grammban, tubusméret, törlés a szerkesztőben ---
+  r = await j(`${stub} showTab('leltar'); var o={};
+    var gomb=function(cl,kod){ return [...document.querySelectorAll('#chemGrid .'+cl)].find(x=>x.dataset.code===kod); };
+    o.torolGomb=!!document.querySelector('#chemGrid .chem-del');
+    var elotte=chemRemaining('A3');
+    gomb('chem-feltolt','A3').click();
+    o.nyit=document.getElementById('feltoltMask').classList.contains('show'); o.alapDb=document.getElementById('ftDb').value; o.egyseg=document.getElementById('ftEgyseg').value; o.szoveg1=document.getElementById('ftOsszeg').textContent;
+    var d=document.getElementById('ftDb'); d.value='2'; d.dispatchEvent(new Event('input')); o.szoveg2=document.getElementById('ftOsszeg').textContent;
+    document.getElementById('ftMent').click(); o.d1=chemRemaining('A3')-elotte; o.zart=!document.getElementById('feltoltMask').classList.contains('show');
+    var elotte2=chemRemaining('A3'); gomb('chem-feltolt','A3').click();
+    var e2=document.getElementById('ftEgyseg'); e2.value='gramm'; e2.dispatchEvent(new Event('change')); o.atvalt=document.getElementById('ftDb').value;
+    d=document.getElementById('ftDb'); d.value='35'; d.dispatchEvent(new Event('input')); document.getElementById('ftMent').click(); o.d2=chemRemaining('A3')-elotte2;
+    var elotte3=chemRemaining('A3'); gomb('chem-feltolt','A3').click(); d=document.getElementById('ftDb'); d.value='0'; d.dispatchEvent(new Event('input')); document.getElementById('ftMent').click(); o.d3=chemRemaining('A3')-elotte3; o.ftErr=document.getElementById('ftErr').textContent; feltoltZar();
+    gomb('chem-edit','A3').click(); o.tubusAlap=document.getElementById('anTubus').value; document.getElementById('anTubus').value='60'; document.getElementById('anMent').click();
+    var elotte4=chemRemaining('A3'); gomb('chem-feltolt','A3').click(); o.tubusOpc=document.getElementById('ftEgyseg').options[0].textContent; document.getElementById('ftMent').click(); o.d4=chemRemaining('A3')-elotte4;
+    document.getElementById('addChemBtn').click(); document.getElementById('anKod').value='UJ1'; document.getElementById('anNev').value='Új'; document.getElementById('anTubus').value='100'; document.getElementById('anDb').value='3'; document.getElementById('anMent').click();
+    o.uj=CHEMICALS.find(x=>x.code==='UJ1');
+    document.getElementById('addChemBtn').click(); document.getElementById('anKod').value='UJ1'; document.getElementById('anMent').click(); o.dupla=document.getElementById('anErr').textContent; anyagZar();
+    gomb('chem-edit','UJ1').click(); document.getElementById('anKod').value='UJ2'; document.getElementById('anMent').click(); o.atnev=CHEMICALS.some(x=>x.code==='UJ2')&&!CHEMICALS.some(x=>x.code==='UJ1');
+    gomb('chem-edit','UJ2').click(); document.getElementById('anTorol').click(); o.torolve=!CHEMICALS.some(x=>x.code==='UJ2'); o.tZart=!document.getElementById('anyagMask').classList.contains('show');
+    var kk=document.querySelector('#chemGrid .chem-card'), b=kk.querySelector('.chem-bar').getBoundingClientRect(), kb=kk.getBoundingClientRect(); o.csikBal=b.left-kb.left; o.savSzel=parseFloat(getComputedStyle(kk,'::before').width);
+    o.mentes=JSON.parse(localStorage.getItem('fodrasz_vegyszerek_v1')).find(x=>x.code==='A3');
+    return o;`);
+  e('leltár: nincs Töröl gomb a kártyán, van Feltöltés', !r.torolGomb && r.nyit, r);
+  e('feltöltés: alapból 1 tubus, 100 g', r.alapDb === '1' && r.egyseg === 'tubus' && /\+ 100 g/.test(r.szoveg1), r);
+  e('2 tubus = 200 g hozzáadódik a maradékhoz', r.d1 === 200 && r.zart && /\+ 200 g/.test(r.szoveg2), r);
+  e('gramm is megadható; egységváltásnál az érték átszámolódik', r.atvalt === '100' && r.d2 === 35, r);
+  e('0 mennyiség elutasítva, a készlet nem változik', r.d3 === 0 && /mennyiség/.test(r.ftErr), r);
+  e('tubusméret: alapból 100, átírható, a feltöltés ezzel számol', r.tubusAlap === '100' && /60 g/.test(r.tubusOpc) && r.d4 === 60, r);
+  e('új anyag: 3 tubus = 300 g induló készlet', r.uj && r.uj.start === 300 && r.uj.tubus === 100, r.uj);
+  e('új anyag: azonos kód elutasítva; átnevezés működik', /Már van/.test(r.dupla) && r.atnev, r);
+  e('törlés a szerkesztő ablakból', r.torolve && r.tZart, r);
+  e('a mennyiségcsík nem lóg a lila sávba', r.csikBal >= r.savSzel, r);
+  e('a tubusméret eltárolódik', r.mentes.tubus === 60, r.mentes);
 
   // --- hibás mentésfájl elutasítása, beépített „—” jeles kártya szerkesztése, használt próbakód megmarad ---
   r = await j(`${stub} var o={}; var jo={date:'2030-01-01',time:'10:00',dur:30,name:'A',phone:'1'};

@@ -1,0 +1,8 @@
+v32 Leltar: Feltoltes, tubusmeret -- 2026-11-01 (meg NEM feltoltve)
+node teszt/v29_chrome_proba.mjs: 66/66 zöld
+node teszt/xss_teszt.mjs: 32/32 rendben
+node teszt/telepites_teszt.mjs: 15/15 zöld
+node teszt/drive_teszt.mjs: MIND ZOLD: 17 teszt
+NEM mert: valodi tablet; emulatoron nem futtattam; fuggetlen ellenor meg nem nezte at.
+
+--- Ellenor utan (felso hatar, nem szam keszlet): 66/66 zöld; xss 32/32 rendben; telepites 15/15 zöld; drive MIND ZOLD: 17 teszt; frissites 11/11 zöld

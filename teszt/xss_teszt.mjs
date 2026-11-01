@@ -146,6 +146,8 @@ nezet('Foglalás 4. lépés', 'foCat=null; selService=Object.assign({cat:"Festé
 nezet('Módosító ablak', 'openEdit(loadBookings()[0]);', [3]);
 nezet('Kártyák lista', 'SZOLGALTATASOK["Festés"][1].name=' + JSON.stringify(X(19)) + '; renderKartyak();', [19]);
 nezet('Kártya-szerkesztő', 'SZOLGALTATASOK["Festés"][1].anyagok=[{code:' + JSON.stringify(X(20)) + ',gram:' + JSON.stringify(X(21)) + '}]; kartyaNyit("Festés",1);', [20, 21]);
+nezet('Feltöltés ablak', 'CHEMICALS[0].tubus=' + JSON.stringify(X(22)) + '; feltoltNyit(CHEMICALS[0].code);', []);
+nezet('Anyag-szerkesztő', 'anyagNyit(CHEMICALS[0].code); CHEMICALS[0].tubus=100;', []);
 nezet('Dupla ablak', 'openDuplaById(' + JSON.stringify(UID_A) + '); dupLetter="A"; renderDupBook();', [1, 17]);
 
 // a dupla ablak pihenő-sora: a fájlból jött hibás szegmens-hossz nem kerülhet a gombba (szám vagy semmi)
