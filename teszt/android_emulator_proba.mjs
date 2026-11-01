@@ -65,7 +65,7 @@ try {
     appMode: document.documentElement.classList.contains('app-mode'),
     driveRejtve: getComputedStyle(document.getElementById('driveBadge')).display === 'none'})`));
   console.log('Betöltött oldal:', k.url, '| verzió:', allapot.ver);
-  ellenoriz('az app a weboldalt tölti be (v29)', allapot.ver === '29', allapot.ver);
+  ellenoriz('az app a weboldalt tölti be (v30)', allapot.ver === '30', allapot.ver);
   ellenoriz('böngésző-azonosítóban MartiApp jel', / MartiApp\//.test(allapot.ua));
   ellenoriz('a mentő híd elérhető', allapot.hid === 'object' && !!allapot.verzio);
   ellenoriz('app-mode bekapcsolva az appban', allapot.appMode);
@@ -107,7 +107,7 @@ try {
   k = await kapcsolodik();
   const offlineVer = await k.ertek(`typeof APP_VER!=='undefined' ? APP_VER : document.body.innerText.slice(0,80)`);
   kep('android_offline.png');
-  ellenoriz('internet (szerver) nélkül is elindul a v29', offlineVer === '29', String(offlineVer));
+  ellenoriz('internet (szerver) nélkül is elindul a v30', offlineVer === '30', String(offlineVer));
   k.zar();
   adb('reverse', 'tcp:8765', 'tcp:8765');
 

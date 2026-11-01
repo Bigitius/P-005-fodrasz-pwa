@@ -17,8 +17,8 @@ Nem függ a Chrome telepítési ajánlatától.
 5. **Telepítés** → **Megnyitás**. Az ikon („Márti fodrászata”) a kezdőképernyőre kerül.
 6. Az alkalmazásban: **⚙️ Rendszer** → **📂 Visszatöltés** → a 2. lépésben mentett fájl.
 
-Frissítés: a tartalom (foglalás, leltár stb.) magától frissül, ha internettel indítod.
-Az alkalmazást csak akkor kell újra letölteni, ha ezt külön kérjük.
+Frissítés: **⚙️ Rendszer → 🔄 Frissítés**. Egy érintés, az app magától újraindul, az adatok megmaradnak.
+Ha a Rendszer fülön ⬆ jel látszik, van újabb verzió.
 
 Korlátok (mért, emulátoron): internet nélkül is indul (az első indításhoz net kell);
 a Google Drive-mentés az alkalmazásban nem működik (a Google tiltja a belépést ilyen

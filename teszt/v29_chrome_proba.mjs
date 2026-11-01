@@ -66,7 +66,7 @@ try {
   r = await j(`${stub} showTab('fooldal'); var c=[...document.querySelectorAll('#foTimeline .tcell[data-t]')];
     return {ver:APP_VER, ful:[...document.querySelectorAll('.tab')].map(t=>t.dataset.tab), elso:c[0].dataset.t, utolso:c[c.length-1].dataset.t, sorok:document.querySelectorAll('#foTimeline .trow').length,
       telepit:!!document.getElementById('telepitKartya')};`);
-  e('v29, nincs Foglalás fül', r.ver === '29' && !r.ful.includes('foglalas') && r.ful.length === 4, r);
+  e('v30, nincs Foglalás fül', r.ver === '30' && !r.ful.includes('foglalas') && r.ful.length === 4, r);
   e('rács 7:00-20:00 (26 sor)', r.elso === '07:00' && r.utolso === '19:30' && r.sorok === 26, r);
   e('nincs telepítés-segítő', !r.telepit);
 

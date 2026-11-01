@@ -417,13 +417,10 @@ if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.a
   .tablet-mode .tab{padding:7px 13px;font-size:14px;border-radius:9px;border-bottom:1px solid var(--line)}
   .tablet-mode .tab.active{box-shadow:none}
   .tablet-mode .backup-btn{padding:6px 10px;font-size:12px;min-height:30px;border-radius:8px}
-  /* 2026-10-09: a Mentes/Visszatoltes gomb tablet-mode-ban elrejtve -- helyet
-     foglaltak a fejlecben, ezert a fulek (.tabs) nem fertek ki egy sorba.
-     Az offlineDownload gomb mar amugy is rejtve van file:// / content://
-     alatt (lasd JS lejjebb) -- igy tablet-mode-ban mindharom gomb rejtve. */
   /* 2026-10-19: a gombok a Rendszer fülre kerültek, ott van hely -- tablet-mode-ban csak a Drive rejtett
      (file://-ról a Google-belépés nem működik), helyette magyarázó szöveg látszik */
-  .tablet-mode #driveBadge{display:none}
+  .tablet-mode #driveBadge,.tablet-mode #frissGomb{display:none}
+  .tab.uj-ver::after{content:' ⬆';color:var(--ok)}
   .rsz-csak-file{display:none}
   .tablet-mode .rsz-csak-file{display:block}
   .rsz-csak-app{display:none}
@@ -553,10 +550,11 @@ if(/ MartiApp\//.test(navigator.userAgent)) document.documentElement.classList.a
           <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
         </div>
         <div class="rsz-kartya">
-          <div class="rsz-cim">📥 Offline letöltés</div>
-          <div class="rsz-leiras">Letölti a programot, hogy internet nélkül is induljon.</div>
-          <button class="backup-btn" id="offlineDownload" title="Program letöltése, hogy internet nélkül is működjön">📥 Offline letöltés</button>
-          <div class="rsz-leiras rsz-csak-file">Helyi fájlként megnyitva erre nincs szükség — így mindig internet nélkül fut.</div>
+          <div class="rsz-cim">🔄 Frissítés</div>
+          <div class="rsz-leiras" id="frissAllapot">Jelenlegi verzió: …</div>
+          <button class="backup-btn" id="frissGomb" title="Új verzió keresése és telepítése">🔄 Frissítés keresése</button>
+          <button class="backup-btn alt" id="apkFriss" style="display:none" title="Az Android-alkalmazás új változatának letöltése">📥 Új alkalmazás letöltése</button>
+          <div class="rsz-leiras rsz-csak-file">Helyi fájlként megnyitva nem frissíthető: a webcímről vagy az alkalmazásból használd.</div>
         </div>
         <div class="rsz-kartya">
           <div class="rsz-cim">☁ Google Drive mentés</div>
@@ -2421,7 +2419,7 @@ renderFooldal();
 renderNevjegyzek();
 
 // === VERZIÓ (látható a böngésző fül címsorában) — minden módosításkor frissítsd! ===
-var APP_VER="29";
+var APP_VER="30";
 (function(){
   var t=document.getElementById('pageTitle');
   if(t) t.textContent='Márti fodrászata · v'+APP_VER;
@@ -2495,67 +2493,93 @@ if ((location.protocol === 'http:' || location.protocol === 'https:') && 'servic
 </script>
 
 <script>
-// === "Offline letöltés" gomb: kézzel, egyértelmű visszajelzéssel tölti le
-// az appot, hogy internet nélkül is működjön (nem kell a láthatatlan,
-// automatikus háttérfolyamatra hagyatkozni). ===
+// === 🔄 Frissítés (2026-11-01): új verzió keresése és telepítése egy gombbal. Az adatokhoz nem nyúl
+// (a foglalások, a leltár és a kártyák a tárolóban vannak, csak a program cserélődik).
+// version.json: {web: az oldal verziója, apk: az Android-alkalmazás verziója}.
 (function () {
-  var btn = document.getElementById('offlineDownload');
-  if (!btn) return;
-  var eredetiSzoveg = btn.textContent;
+  var btn = document.getElementById('frissGomb'), apkBtn = document.getElementById('apkFriss');
+  var allapot = document.getElementById('frissAllapot');
+  var ful = document.querySelector('.tab[data-tab="rendszer"]');
+  if (!btn || !allapot) return;
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') { allapot.style.display = 'none'; return; }
+  var CEL_KULCS = 'fodrasz_friss_cel', uj = null;
 
-  // 2026-09-06: helyi fajlkent (file://) megnyitva a gombnak nincs ertelme --
-  // ott mar amugy is "offline" fut (nincs halozati fuggoseg), nincs mit
-  // letolteni. Inkabb elrejtjuk, mint hogy hibauzenetet mutassunk feleslegesen.
-  if (location.protocol !== 'http:' && location.protocol !== 'https:') {
-    btn.style.display = 'none';
-    return;
+  // újraindulás után: tényleg az új verzió fut-e? (állapotváltozás csak mérésből)
+  try {
+    var cel = sessionStorage.getItem(CEL_KULCS);
+    if (cel) {
+      sessionStorage.removeItem(CEL_KULCS);
+      if (+APP_VER >= +cel) toast('Frissítve: v' + APP_VER);
+      else alert('A frissítés NEM sikerült: továbbra is a v' + APP_VER + ' fut (a cél v' + cel + ' volt). Az adatok rendben vannak. Próbáld újra később.');
+    }
+  } catch (e) { console.warn('Frissítés-ellenőrzés:', e); }
+
+  function verzioLekeres() {
+    return fetch('version.json?x=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (v) {
+      if (!v || !/^\d+$/.test(String(v.web))) throw new Error('hibás verzióadat');
+      return v;
+    });
   }
-
-  if (!('serviceWorker' in navigator)) {
+  function allit(v) {
+    uj = +v.web > +APP_VER ? String(v.web) : null;
+    allapot.textContent = 'Jelenlegi verzió: v' + APP_VER + (uj ? ' — van újabb: v' + uj : ' — ez a legfrissebb.');
+    btn.textContent = uj ? '🔄 Frissítés v' + uj + '-re' : '🔄 Frissítés keresése';
+    if (ful) ful.classList.toggle('uj-ver', !!uj);
+    // az Android-alkalmazás cseréjét az Android csak jóváhagyással engedi: külön gomb, ritkán kell
+    var appV = null;
+    try { appV = window.MartiApp && window.MartiApp.verzio ? String(window.MartiApp.verzio()) : null; } catch (e) {}
+    var apkUj = !!(appV && v.apk && appV.indexOf('-proba') < 0 && appV !== String(v.apk));
+    if (apkBtn) apkBtn.style.display = apkUj ? '' : 'none';
+  }
+  function hiba(uzenet) {
+    btn.disabled = false;
+    btn.textContent = uj ? '🔄 Frissítés v' + uj + '-re' : '🔄 Frissítés keresése';
+    allapot.textContent = 'Jelenlegi verzió: v' + APP_VER + ' — ' + uzenet;
+  }
+  // az új service worker betöltése; utána újraindulás, ami a friss oldalt hozza
+  function telepit() {
     btn.disabled = true;
-    btn.title = 'A böngésződ nem támogatja az offline letöltést';
-    return;
+    btn.textContent = '⏳ Frissítés…';
+    allapot.textContent = 'Az új verzió töltődik, ne zárd be az appot…';
+    try { sessionStorage.setItem(CEL_KULCS, uj); } catch (e) {}
+    var munka = !('serviceWorker' in navigator) ? Promise.resolve() : navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg) return null;
+      return reg.update().then(function () {
+        var w = reg.installing || reg.waiting;
+        if (!w) return null;
+        return new Promise(function (ok, nem) {
+          var idozito = setTimeout(function () { nem(new Error('időtúllépés')); }, 60000);
+          w.addEventListener('statechange', function () {
+            if (w.state === 'activated') { clearTimeout(idozito); ok(); }
+            if (w.state === 'redundant') { clearTimeout(idozito); nem(new Error('a letöltés félbeszakadt')); }
+          });
+        });
+      });
+    });
+    munka.then(function () { location.reload(); }).catch(function (e) {
+      try { sessionStorage.removeItem(CEL_KULCS); } catch (x) {}
+      hiba('a frissítés nem sikerült (' + (e && e.message ? e.message : e) + '), a mostani verzió maradt.');
+    });
   }
-
-  function idozit(promise, ms) {
-    return Promise.race([
-      promise,
-      new Promise(function (_, reject) {
-        setTimeout(function () { reject(new Error('idotullepes')); }, ms);
-      })
-    ]);
-  }
-
-  function visszaall(szoveg, keses) {
-    setTimeout(function () {
-      btn.textContent = eredetiSzoveg;
-      btn.disabled = false;
-    }, keses);
-  }
-
   btn.addEventListener('click', function () {
     btn.disabled = true;
-    btn.textContent = '⏳ Letöltés...';
-    idozit(
-      navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
-        .then(function (reg) {
-          return (reg.update ? reg.update().catch(function () {}) : Promise.resolve()).then(function () { return reg; });
-        })
-        .then(function () {
-          return navigator.serviceWorker.ready;
-        }),
-      15000
-    ).then(function () {
-      btn.textContent = '✅ Kész, offline is működik';
-      visszaall(eredetiSzoveg, 4000);
-    }).catch(function (err) {
-      console.warn('Offline letoltes hiba:', err);
-      var uzenet = (err && (err.message || err.name)) ? (err.message || err.name) : String(err);
-      btn.textContent = '❌ Nem sikerült';
-      alert('Offline letöltés hiba (küldd el screenshotnak):\n' + uzenet);
-      visszaall(eredetiSzoveg, 4000);
+    verzioLekeres().then(function (v) {
+      allit(v);
+      if (uj) telepit(); else { btn.disabled = false; toast('Ez a legfrissebb verzió (v' + APP_VER + ')'); }
+    }).catch(function (e) {
+      console.warn('Frissítés:', e);
+      hiba('nem sikerült ellenőrizni (nincs internet?).');
     });
   });
+  if (apkBtn) apkBtn.addEventListener('click', function () { location.href = 'marti-fodraszata.apk'; });
+  allapot.textContent = 'Jelenlegi verzió: v' + APP_VER;
+  // induláskor csendben ellenőriz; net nélkül nem hiba
+  setTimeout(function () {
+    verzioLekeres().then(allit).catch(function (e) { console.warn('Verzió-ellenőrzés:', e); });
+  }, 2000);
 })();
 </script>
 

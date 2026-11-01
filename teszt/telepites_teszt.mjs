@@ -61,5 +61,14 @@ ellenoriz('service worker: főoldalnak csak HTML-t ment (APK-letöltés nem írj
 const driveUi = readFileSync(new URL('../drive-ui.js', import.meta.url), 'utf8');
 ellenoriz('Drive: az appban nem indul (Google-belépés tiltott WebView-ban)', driveUi.includes("/ MartiApp\\//.test(navigator.userAgent)) return;"));
 
+// 8. kiadási őr: a verziók egyezzenek, különben a Frissítés gomb hibásan jelezne
+const verzio = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
+const appVer = (html.match(/var APP_VER="(\d+)"/) || [])[1];
+ellenoriz('version.json web = APP_VER', verzio.web === appVer, verzio.web + ' / ' + appVer);
+ellenoriz('service worker cache-név = APP_VER (különben nem frissül a program)', sw.includes("fodrasz-foglalo-v" + appVer + "'"));
+const epit = readFileSync(new URL('../android/epit.py', import.meta.url), 'utf8');
+ellenoriz('version.json apk = az épített APK verziója', epit.includes('VERZIO = "' + verzio.apk + '"'));
+ellenoriz('service worker: a version.json NINCS az offline listában', !sw.includes('version.json'));
+
 console.log(`\n${jo}/${jo + rossz} zöld`);
 if (rossz) process.exit(1);

@@ -1,0 +1,11 @@
+v30 Frissites gomb -- 2026-11-01 (meg NEM feltoltve)
+node teszt/frissites_proba.mjs (valodi Chrome, sajat szerver max-age=600 + ETag, valodi service worker, 'uj verzio kiadasa'): 10/10 zold
+node teszt/frissites_proba.mjs android (proba-APK, Android 14 emulator, ablak nelkul): 10/10 zold
+node teszt/android_emulator_proba.mjs: 16/16 zold
+node teszt/v29_chrome_proba.mjs: 55/55 zold
+node teszt/xss_teszt.mjs: 28/28 rendben
+node teszt/telepites_teszt.mjs: 15/15 zöld
+node teszt/drive_teszt.mjs: MIND ZOLD: 17 teszt
+NEM mert: valodi TAB 10 Lite; a GitHub Pages valodi gyorsitotara; az 'Uj alkalmazas letoltese' gomb (ritka eset, APK-csere) valodi letoltessel.
+
+--- Ellenor utan: a service worker az eredeti keresset tolti (atiranyitas-kezeles), proba bovitve: 11/11 zöld; xss 28/28 rendben; telepites 15/15 zöld; drive MIND ZOLD: 17 teszt. Az emulatoros futast erre a kis modositasra nem ismeteltem meg.

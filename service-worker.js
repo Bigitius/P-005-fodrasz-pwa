@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'fodrasz-foglalo-v29';
+﻿const CACHE_NAME = 'fodrasz-foglalo-v30';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './service-worker.js', './drive-config.js', './drive-sync.js', './drive-ui.js', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -27,7 +27,8 @@ self.addEventListener('fetch', (event) => {
   // hagyatkozzunk, mert atiranyitas/parameter miatt eltero URL is lehet.
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).then((valasz) => {
+      // 2026-11-01: cache:'no-cache' -- a böngésző gyorsítótárából ellenőrzés nélkül nem jöhet régi oldal
+      fetch(event.request, { cache: 'no-cache' }).then((valasz) => {
         // 2026-10-19: a sikeresen letoltott oldallal frissitjuk az offline peldanyt is
         // (korabban csak telepiteskor mentodott el, es utana soha nem frissult).
         // 2026-10-24: csak HTML-oldalt mentünk főoldalnak -- pl. az APK letöltése is "navigate" kérés,

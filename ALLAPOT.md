@@ -1,5 +1,5 @@
 # ALLAPOT -- P-005-fodrasz-pwa
-Utolso frissites: 2026-10-31
+Utolso frissites: 2026-11-01
 
 Nyilvanos repo: ebbe a fajlba csak olyan kerulhet, ami barkinek lathato lehet. Belso jegyzetek a gitbol kizart BELSO.md-ben vannak.
 
@@ -121,6 +121,11 @@ MERT (bizonyitek/v29_2026-10-31.txt, tesztek: teszt/v29_chrome_proba.mjs valódi
 - Próbaadat: a régi 5 névjegy és a Teszt 15p pontos egyezésre törlődik; K001-K003 csak érintetlenül (eredeti név, 500 g, nincs rá foglalás).
 - Mentésfájl-visszatöltés szigorú ellenőrzéssel. Független ellenőr és biztonsági átvizsgálás leletei javítva.
 ALLITOTT: valódi TAB 10 Lite-on nem próbált; tablet-mode (file://) rácsillesztés nem mért; a Dupla kártya választéka név szerint köt, átnevezett festés kimarad belőle.
+
+## Frissítés gomb (2026-11-01, app v30, SW-cache v30, élesítve)
+MERT (bizonyitek/v30_2026-11-01.txt): Rendszer fül 🔄 Frissítés (az Offline letöltés helyett): version.json alapján keres, új service workert tölt, újraindul, siker/kudarc mérés alapján; induláskor ⬆ jel. teszt/frissites_proba.mjs valódi service workerrel: Chrome 11/11, emulátor 10/10 (a végső kis SW-javítás előtt). A service worker az oldalt mindig a szervernél ellenőrzi.
+Kiadási szabály: új verziónál APP_VER, SW-cache név és version.json együtt változik (teszt/telepites_teszt.mjs őrzi); új APK-nál a version.json apk mezője is.
+ALLITOTT: valódi TAB 10 Lite-on nem próbált; az „Új alkalmazás letöltése” gomb valódi letöltéssel nem mért; a v29-ről v30-ra átállás kódból következtetve (internettel 2-3 indítás).
 
 ## Mi nyitott
 - (2026-10-13) REGOTA ALL -- Igazságforrás tisztázandó (részletek: BELSO.md); a Drive-on lévő `index.v2.html` nincs összefésülve.
