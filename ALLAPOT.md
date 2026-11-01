@@ -127,6 +127,9 @@ MERT (bizonyitek/v30_2026-11-01.txt): Rendszer fül 🔄 Frissítés (az Offline
 Kiadási szabály: új verziónál APP_VER, SW-cache név és version.json együtt változik (teszt/telepites_teszt.mjs őrzi); új APK-nál a version.json apk mezője is.
 ALLITOTT: valódi TAB 10 Lite-on nem próbált; az „Új alkalmazás letöltése” gomb valódi letöltéssel nem mért; a v29-ről v30-ra átállás kódból következtetve (internettel 2-3 indítás).
 
+## v31 (2026-11-01)
+MERT: a Drive-gomb felirata rövid („Drive: nincs beállítva”), 1280x800-on befér a kártyába; telepites 15/15, Drive 17/17, xss 28/28, v29_chrome_proba 55/55, frissites_proba 11/11.
+
 ## Mi nyitott
 - (2026-10-13) REGOTA ALL -- Igazságforrás tisztázandó (részletek: BELSO.md); a Drive-on lévő `index.v2.html` nincs összefésülve.
 - (2026-10-16) REGOTA ALL -- Drive-mentés: OAuth kliensazonosító (Google Cloud) hiányzik; az Androidos appban a Google-belépés amúgy sem működik, ezért dönteni kell, kell-e még.

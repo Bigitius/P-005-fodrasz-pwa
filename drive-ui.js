@@ -114,7 +114,7 @@
     setInterval(function () { ds.szinkron(); }, 5 * 60 * 1000);
     ds.kezdes();
   } else {
-    frissitBadge({ kind: 'hiba', text: 'Drive: nincs beállítva (hiányzik a kliensazonosító)', dirty: false });
+    frissitBadge({ kind: 'hiba', text: 'Drive: nincs beállítva', dirty: false });
   }
 
   // ---- panel ----
